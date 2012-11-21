@@ -9,9 +9,7 @@ package simulator;
  */
 public class Simulator {
 
-	/**
-	 * @param args
-	 */
+	
 	public static void main(String[] args) {
 	
 
