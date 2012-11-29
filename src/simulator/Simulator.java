@@ -4,7 +4,6 @@
 package simulator;
 
 import java.util.PriorityQueue;
-import java.util.TreeMap;
 
 import event.ArrivalEvent;
 import event.Event;
@@ -25,12 +24,11 @@ public class Simulator {
 	private PriorityQueue<Event> simulation;
 	private StreamNetwork network;
 
-	
-	public Simulator(){
+	public Simulator() {
 		simulation = new PriorityQueue<Event>();
 		network = new StreamNetwork();
 	}
-	
+
 	public void runSimulation() {
 
 		generateEvents();
@@ -38,7 +36,7 @@ public class Simulator {
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {
 			Event event = simulation.peek();
 			if (event != null)
-				event.execute();
+				event.execute(network);
 
 			if (event.isCompleted(CURRENT_TIME))
 				simulation.remove(event);

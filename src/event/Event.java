@@ -3,7 +3,9 @@
  */
 package event;
 
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
+
+import simulator.StreamNetwork;
 
 /**
  * @author kerem
@@ -22,7 +24,7 @@ public abstract class Event implements Comparable<Event> {
 		logger = getLogger();
 	}
 
-	public abstract void execute();
+	public abstract void execute(StreamNetwork network);
 
 	public abstract boolean isCompleted(int currentTime);
 
