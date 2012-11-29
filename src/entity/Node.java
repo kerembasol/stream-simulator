@@ -8,5 +8,7 @@ package entity;
  *
  */
 public class Node {
-
+	protected Buffer buffer;
+	protected int downloadRate;
+	
 }

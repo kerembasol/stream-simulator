@@ -16,5 +16,6 @@ public class StreamNetwork {
 
 	private Tracker tracker;
 	private List<Node> watchingNodes;
+	private List<Node> victimNodes;
 
 }

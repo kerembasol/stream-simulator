@@ -8,5 +8,8 @@ package entity;
  *
  */
 public class Packet {
+	private int packetId;
+	private int channelId;
+	private int packetSize;
 
 }
