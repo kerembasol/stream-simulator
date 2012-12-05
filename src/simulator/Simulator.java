@@ -22,6 +22,12 @@ public class Simulator {
 	public static int NODE_COUNT = 0;
 
 	private PriorityQueue<Event> simulation;
+	private StreamNetwork network;
+
+	public Simulator() {
+		simulation = new PriorityQueue<Event>();
+		network = new StreamNetwork();
+	}
 
 	public void runSimulation() {
 
@@ -30,7 +36,7 @@ public class Simulator {
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {
 			Event event = simulation.peek();
 			if (event != null)
-				event.execute();
+				event.execute(network);
 
 			if (event.isCompleted(CURRENT_TIME))
 				simulation.remove(event);
