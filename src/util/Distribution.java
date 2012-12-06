@@ -3,19 +3,22 @@
  */
 package util;
 
+import java.util.Random;
+
 /**
  * @author kerem
  * 
  */
 public class Distribution {
-	// TODO implement discrete exponential
-	public static int exponential(int parameter) {
-		return 1;
+
+	private static Random generator = new Random();
+
+	public static int uniform(int n) {
+		return generator.nextInt(n);
 	}
 
-	// TODO implement discrete poisson
-	public static int poisson(int parameter) {
-		return 1;
+	public static Integer getWatchDuration() {
+		return generator.nextInt(10) + 1;
 	}
 
 }

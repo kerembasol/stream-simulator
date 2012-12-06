@@ -3,9 +3,12 @@
  */
 package event;
 
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
 import simulator.StreamNetwork;
+import exception.AdditionOfAlreadyExistingNodeException;
+import exception.NotEnoughAvailableTrackerStreamException;
+import exception.RetrievalOfNonExistingNode;
 
 /**
  * @author kerem
@@ -13,18 +16,21 @@ import simulator.StreamNetwork;
  */
 public abstract class Event implements Comparable<Event> {
 
-	protected int nodeId;
-	protected int startTime;
+	protected Integer nodeId;
+	protected Integer startTime;
 
 	private final Logger logger;
 
-	public Event(int time, int id) {
+	public Event(Integer time, Integer id) {
 		nodeId = id;
 		startTime = time;
 		logger = getLogger();
 	}
 
-	public abstract void execute(StreamNetwork network);
+	public abstract void execute(StreamNetwork network)
+			throws AdditionOfAlreadyExistingNodeException,
+			RetrievalOfNonExistingNode,
+			NotEnoughAvailableTrackerStreamException;
 
 	public abstract boolean isCompleted(int currentTime);
 
@@ -33,15 +39,6 @@ public abstract class Event implements Comparable<Event> {
 		if (o == null)
 			return 1;
 		return startTime > o.startTime ? 1 : startTime < o.startTime ? -1 : 0;
-	}
-
-	/**
-	 * This function will be overwritten in {@link ProcessEvent} only
-	 * 
-	 * @return
-	 */
-	public int getProcessDuration() {
-		return 0;
 	}
 
 	protected abstract Logger getLogger();

@@ -3,11 +3,17 @@
  */
 package simulator;
 
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
+import util.Distribution;
 import event.ArrivalEvent;
 import event.Event;
-import event.ProcessEvent;
+import exception.AdditionOfAlreadyExistingNodeException;
+import exception.NotEnoughAvailableTrackerStreamException;
+import exception.RetrievalOfNonExistingNode;
 
 /**
  * @author kerem
@@ -15,45 +21,69 @@ import event.ProcessEvent;
  */
 public class Simulator {
 
-	public static int CURRENT_TIME = 0;
-	public static final int SIMULATION_LENGTH = 10000;
+	public static Integer CURRENT_TIME = 0;
+	public static final Integer SIMULATION_LENGTH = 10000;
 	public static final double POISSON_PARAM = 1;
 	public static final double EXPO_PARAM = 1;
-	public static int NODE_COUNT = 0;
+	public static Integer NODE_COUNT = 0;
 
-	private PriorityQueue<Event> simulation;
-	private StreamNetwork network;
+	private static SortedMap<Integer, List<Event>> simulationEvents;
+	private final StreamNetwork network;
+
+	private static final int EVENT_CREATE_NUMBER = 3;
+	private static final int EVENT_CREATE_PERC = 10;
 
 	public Simulator() {
-		simulation = new PriorityQueue<Event>();
-		network = new StreamNetwork();
+		simulationEvents = new TreeMap<Integer, List<Event>>();
+		network = StreamNetwork.getInstance();
+
+		simulationEvents.keySet();
 	}
 
-	public void runSimulation() {
+	public void runSimulation() throws AdditionOfAlreadyExistingNodeException,
+			RetrievalOfNonExistingNode,
+			NotEnoughAvailableTrackerStreamException {
 
 		generateEvents();
-
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {
-			Event event = simulation.peek();
-			if (event != null)
-				event.execute(network);
-
-			if (event.isCompleted(CURRENT_TIME))
-				simulation.remove(event);
-
+			List<Event> currentEvents = simulationEvents.get(CURRENT_TIME);
+			if (currentEvents != null) {
+				for (Event event : currentEvents) {
+					System.out.println("EXECUTE EVENT (Time:" + CURRENT_TIME
+							+ ")");
+					event.execute(network);
+				}
+			}
+			generateEvents();
 		}
 	}
 
 	private void generateEvents() {
-		Event arrivalEvent = new ArrivalEvent(CURRENT_TIME, NODE_COUNT);
-		Event processEvent = new ProcessEvent(CURRENT_TIME + 1, NODE_COUNT);
-		Event departureEvent = new ProcessEvent(CURRENT_TIME + 2
-				+ processEvent.getProcessDuration(), NODE_COUNT);
+		if (shouldCreateEvent()) {
+			for (int i = 1; i < getNumOfEventsToCreate(); i++) {
+				Event arrivalEvent = new ArrivalEvent(CURRENT_TIME,
+						NODE_COUNT++);
+				addEventToSimulation(CURRENT_TIME, arrivalEvent);
+			}
+		}
 
-		simulation.add(arrivalEvent);
-		simulation.add(processEvent);
-		simulation.add(departureEvent);
+	}
 
+	public static void addEventToSimulation(Integer eventTime, Event event) {
+		List<Event> events = simulationEvents.get(eventTime);
+		if (events == null)
+			events = new ArrayList<Event>();
+
+		events.add(event);
+		simulationEvents.put(eventTime, events);
+	}
+
+	private int getNumOfEventsToCreate() {
+		return Distribution.uniform(EVENT_CREATE_NUMBER) + 1;
+	}
+
+	private boolean shouldCreateEvent() {
+		return Distribution.uniform(100) > 100 - EVENT_CREATE_PERC;
 	}
 
 	/**
@@ -61,7 +91,12 @@ public class Simulator {
 	 */
 	public static void main(String[] args) {
 		Simulator simulator = new Simulator();
-		simulator.runSimulation();
+		try {
+			simulator.runSimulation();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
 
 	}
 

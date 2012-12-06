@@ -5,22 +5,39 @@ package event;
 
 import org.apache.log4j.Logger;
 
+import simulator.Simulator;
+import simulator.StreamNetwork;
+import entity.Node;
+import exception.AdditionOfAlreadyExistingNodeException;
+import exception.NotEnoughAvailableTrackerStreamException;
+import exception.RetrievalOfNonExistingNode;
+
 /**
  * @author kerem
  * 
  */
 public class ArrivalEvent extends Event {
 
-	/**
-	 * @param time
-	 * @param id
-	 */
-	public ArrivalEvent(int time, int id) {
+	public ArrivalEvent(Integer time, Integer id) {
 		super(time, id);
 	}
 
 	@Override
-	public void execute() {
+	public void execute(StreamNetwork network)
+			throws AdditionOfAlreadyExistingNodeException,
+			RetrievalOfNonExistingNode,
+			NotEnoughAvailableTrackerStreamException {
+
+		System.out.println("Executing arrival event (start : " + startTime
+				+ ", NodeId:" + nodeId + ")");
+
+		Node node = network.handleNewNode(nodeId, startTime);
+		if (node != null) {
+			Integer newStartTime = node.getPlayStartTime()
+					+ node.getWatchDuration();
+			Simulator.addEventToSimulation(newStartTime, new DepartureEvent(
+					newStartTime, node.getNodeId()));
+		}
 
 	}
 
