@@ -3,8 +3,6 @@
  */
 package event;
 
-import org.apache.log4j.Logger;
-
 import simulator.StreamNetwork;
 import entity.Node;
 import exception.RetrievalOfNonExistingNode;
@@ -36,11 +34,6 @@ public class DepartureEvent extends Event {
 					"Trying to depart non-existing node");
 
 		node.detachNodeFromNetwork(network);
-	}
-
-	@Override
-	protected Logger getLogger() {
-		return Logger.getLogger("event.departure");
 	}
 
 	@Override

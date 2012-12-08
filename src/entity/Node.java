@@ -1,6 +1,3 @@
-/**
- * 
- */
 package entity;
 
 import java.nio.Buffer;
@@ -8,11 +5,7 @@ import java.nio.Buffer;
 import simulator.StreamNetwork;
 import exception.RetrievalOfNonExistingNode;
 
-/**
- * @author kerem
- * 
- */
-public abstract class Node {
+public abstract class Node implements Comparable {
 
 	protected Integer nodeId;
 	protected Buffer buffer;
@@ -27,11 +20,20 @@ public abstract class Node {
 		this.playStartTime = playStartTime;
 		this.watchDuration = watchDuration;
 		this.playRate = playRate;
-		this.playAmount = 0;
+		playAmount = Integer.valueOf(0);
 	}
 
-	public abstract void detachNodeFromNetwork(StreamNetwork network)
+	public abstract void detachNodeFromNetwork(StreamNetwork streamnetwork)
 			throws RetrievalOfNonExistingNode;
+
+	public int compareTo(Node n) {
+		if (n == null) {
+			return 1;
+		} else {
+			return nodeId.intValue() <= n.getNodeId().intValue() ? nodeId
+					.intValue() >= n.getNodeId().intValue() ? 0 : -1 : 1;
+		}
+	}
 
 	public Integer getNodeId() {
 		return nodeId;
@@ -57,4 +59,8 @@ public abstract class Node {
 		return watchDuration;
 	}
 
+	@Override
+	public volatile int compareTo(Object obj) {
+		return compareTo((Node) obj);
+	}
 }

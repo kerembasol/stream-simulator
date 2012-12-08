@@ -3,8 +3,6 @@
  */
 package event;
 
-import org.apache.log4j.Logger;
-
 import simulator.Simulator;
 import simulator.StreamNetwork;
 import entity.Node;
@@ -39,11 +37,6 @@ public class ArrivalEvent extends Event {
 					newStartTime, node.getNodeId()));
 		}
 
-	}
-
-	@Override
-	protected Logger getLogger() {
-		return Logger.getLogger("event.arrival");
 	}
 
 	@Override

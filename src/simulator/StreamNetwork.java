@@ -64,6 +64,9 @@ public class StreamNetwork {
 		Integer playRate = getPlayRate();
 
 		Node node = null;
+		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
+				.append(" requesting a playback rate of ").append(playRate)
+				.toString());
 		if (tracker.hasAvailableBandwith(playRate)) {
 			node = new WatchingNode(nodeId, startTime, playRate, watchDuration);
 			insertWatchingNode(nodeId, (WatchingNode) node);
@@ -107,6 +110,12 @@ public class StreamNetwork {
 					"Adding already existing watching node");
 		watchingNodes.put(nodeId, node);
 		tracker.decreaseAvailableStreamRateByAmount(node.getPlayRate());
+		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
+				.append(" joined network as a Watching node. Playback rate:")
+				.append(node.getPlayRate()).append(". Available upload rate: ")
+				.append(node.getUploadRate())
+				.append(" .Available network rate remaining: ")
+				.append(tracker.getAvailableStreamRate()).toString());
 	}
 
 	public void insertVictimNode(Integer nodeId, VictimNode vn,
@@ -125,10 +134,20 @@ public class StreamNetwork {
 		victimNodes.put(nodeId, vn);
 		Set<WatchingNode> distributingWns = distributedPlayRateRoundRobin(vn,
 				wns);
+
+		System.out.print((new StringBuilder("\tNode ")).append(nodeId)
+				.append(" joined network as a Victim Node. Playback rate : ")
+				.append(vn.getPlayRate())
+				.append(". Stream received from following Watching Nodes : ")
+				.toString());
+		System.out.print("< ");
 		for (WatchingNode wn : distributingWns) {
 			wn.associateVictimNode(nodeId, vn);
 			vn.associateWatchingNode(wn.getNodeId(), wn);
+			System.out.print((new StringBuilder("-")).append(wn.getNodeId())
+					.toString());
 		}
+		System.out.println("- >");
 
 	}
 

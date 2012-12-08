@@ -31,13 +31,12 @@ public class Simulator {
 	private final StreamNetwork network;
 
 	private static final int EVENT_CREATE_NUMBER = 3;
-	private static final int EVENT_CREATE_PERC = 10;
+	private static final int EVENT_CREATE_PERC = 30;
 
 	public Simulator() {
 		simulationEvents = new TreeMap<Integer, List<Event>>();
 		network = StreamNetwork.getInstance();
 
-		simulationEvents.keySet();
 	}
 
 	public void runSimulation() throws AdditionOfAlreadyExistingNodeException,
