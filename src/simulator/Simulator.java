@@ -45,7 +45,7 @@ public class Simulator {
 
 		generateEvents();
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {
-			List<Event> currentEvents = simulationEvents.get(CURRENT_TIME);
+			List<Event> currentEvents = simulationEvents.get(CURRENT_TIME++);
 			if (currentEvents != null) {
 				for (Event event : currentEvents) {
 					System.out.println("EXECUTE EVENT (Time:" + CURRENT_TIME

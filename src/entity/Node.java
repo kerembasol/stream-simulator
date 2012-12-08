@@ -5,7 +5,7 @@ import java.nio.Buffer;
 import simulator.StreamNetwork;
 import exception.RetrievalOfNonExistingNode;
 
-public abstract class Node implements Comparable {
+public abstract class Node implements Comparable<Node> {
 
 	protected Integer nodeId;
 	protected Buffer buffer;
@@ -26,6 +26,7 @@ public abstract class Node implements Comparable {
 	public abstract void detachNodeFromNetwork(StreamNetwork streamnetwork)
 			throws RetrievalOfNonExistingNode;
 
+	@Override
 	public int compareTo(Node n) {
 		if (n == null) {
 			return 1;
@@ -59,8 +60,4 @@ public abstract class Node implements Comparable {
 		return watchDuration;
 	}
 
-	@Override
-	public volatile int compareTo(Object obj) {
-		return compareTo((Node) obj);
-	}
 }
