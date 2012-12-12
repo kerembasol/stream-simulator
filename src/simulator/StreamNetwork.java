@@ -11,12 +11,16 @@ import java.util.TreeSet;
 
 import util.Distribution;
 import entity.Node;
+import entity.PacketSet;
 import entity.Tracker;
 import entity.VictimNode;
 import entity.WatchingNode;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfOutdatedPacketSetException;
+import exception.BufferOverflowException;
+import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
-import exception.RetrievalOfNonExistingNode;
+import exception.RetrievalOfNonExistingNodeException;
 
 /**
  * @author kerem
@@ -52,8 +56,10 @@ public class StreamNetwork {
 
 	public Node handleNewNode(Integer nodeId, Integer startTime)
 			throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNode,
-			NotEnoughAvailableTrackerStreamException {
+			RetrievalOfNonExistingNodeException,
+			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
+			AdditionOfOutdatedPacketSetException,
+			InconsistentPacketAdditionToSetByTime {
 
 		if (getNodeById(nodeId) != null)
 			throw new AdditionOfAlreadyExistingNodeException(
@@ -104,10 +110,14 @@ public class StreamNetwork {
 
 	public void insertWatchingNode(Integer nodeId, WatchingNode node)
 			throws AdditionOfAlreadyExistingNodeException,
-			NotEnoughAvailableTrackerStreamException {
+			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
+			AdditionOfOutdatedPacketSetException,
+			InconsistentPacketAdditionToSetByTime {
 		if (watchingNodes.containsKey(nodeId))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing watching node");
+		node.addPacketSetToPlaybackBuffer(createPacketSet(
+				Simulator.CURRENT_TIME, node.getPlayRate()));
 		watchingNodes.put(nodeId, node);
 		tracker.decreaseAvailableStreamRateByAmount(node.getPlayRate());
 		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
@@ -121,14 +131,14 @@ public class StreamNetwork {
 	public void insertVictimNode(Integer nodeId, VictimNode vn,
 			List<WatchingNode> wns)
 			throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNode {
+			RetrievalOfNonExistingNodeException {
 
 		if (victimNodes.containsKey(nodeId))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing victim node");
 		for (WatchingNode wn : wns)
 			if (!watchingNodes.containsKey(wn.getNodeId()))
-				throw new RetrievalOfNonExistingNode(
+				throw new RetrievalOfNonExistingNodeException(
 						"Trying to retrieve non-existing watching node");
 
 		victimNodes.put(nodeId, vn);
@@ -170,6 +180,10 @@ public class StreamNetwork {
 		return distributingWns;
 	}
 
+	public void updateBuffers() {
+
+	}
+
 	/**
 	 * @return the watchingNodes
 	 */
@@ -186,6 +200,13 @@ public class StreamNetwork {
 
 	public Tracker getTracker() {
 		return tracker;
+	}
+
+	public PacketSet createPacketSet(Integer time, Integer playRate)
+			throws InconsistentPacketAdditionToSetByTime {
+		PacketSet set = new PacketSet(time, playRate);
+		set.fillPacketSet(time, playRate);
+		return set;
 	}
 
 }

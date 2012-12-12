@@ -12,8 +12,11 @@ import util.Distribution;
 import event.ArrivalEvent;
 import event.Event;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfOutdatedPacketSetException;
+import exception.BufferOverflowException;
+import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
-import exception.RetrievalOfNonExistingNode;
+import exception.RetrievalOfNonExistingNodeException;
 
 /**
  * @author kerem
@@ -26,6 +29,7 @@ public class Simulator {
 	public static final double POISSON_PARAM = 1;
 	public static final double EXPO_PARAM = 1;
 	public static Integer NODE_COUNT = 0;
+	public static Integer PACKET_ID_COUNT = 0;
 
 	private static SortedMap<Integer, List<Event>> simulationEvents;
 	private final StreamNetwork network;
@@ -40,12 +44,14 @@ public class Simulator {
 	}
 
 	public void runSimulation() throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNode,
-			NotEnoughAvailableTrackerStreamException {
+			RetrievalOfNonExistingNodeException,
+			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
+			AdditionOfOutdatedPacketSetException,
+			InconsistentPacketAdditionToSetByTime {
 
 		generateEvents();
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {
-			List<Event> currentEvents = simulationEvents.get(CURRENT_TIME++);
+			List<Event> currentEvents = simulationEvents.get(CURRENT_TIME);
 			if (currentEvents != null) {
 				for (Event event : currentEvents) {
 					System.out.println("EXECUTE EVENT (Time:" + CURRENT_TIME
@@ -53,6 +59,8 @@ public class Simulator {
 					event.execute(network);
 				}
 			}
+			network.updateBuffers();
+			CURRENT_TIME++;
 			generateEvents();
 		}
 	}

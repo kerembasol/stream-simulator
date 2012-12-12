@@ -3,13 +3,18 @@
  */
 package entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import simulator.StreamNetwork;
 import util.Distribution;
 import exception.AdditionOfAlreadyExistingNodeException;
-import exception.RetrievalOfNonExistingNode;
+import exception.AdditionOfOutdatedPacketSetException;
+import exception.BufferOverflowException;
+import exception.BufferUnderflowException;
+import exception.RetrievalOfNonExistingNodeException;
 
 /**
  * @author kerem
@@ -20,8 +25,11 @@ public class WatchingNode extends Node {
 	private Integer uploadRate;
 	private Integer availableUploadAmount;
 	private SortedMap<Integer, VictimNode> victimNodes;
+	private List<PacketSet> uploadBuffer;
 
 	private static final int UPLOAD_RATE = 15;
+	private static final int UPLOAD_BUFFER_CONSTANT = 20; // # of seconds for
+															// playback
 
 	public WatchingNode(Integer nodeId, Integer playStartTime,
 			Integer playRate, Integer watchDuration) {
@@ -29,6 +37,7 @@ public class WatchingNode extends Node {
 		this.uploadRate = initUploadRate();
 		this.victimNodes = new TreeMap<Integer, VictimNode>();
 		this.availableUploadAmount = uploadRate;
+		this.playbackBuffer = new ArrayList<PacketSet>(UPLOAD_BUFFER_CONSTANT);
 	}
 
 	private Integer initUploadRate() {
@@ -58,9 +67,9 @@ public class WatchingNode extends Node {
 	}
 
 	public void removeVictimNode(Integer nodeId)
-			throws RetrievalOfNonExistingNode {
+			throws RetrievalOfNonExistingNodeException {
 		if (victimNodes.get(nodeId) == null)
-			throw new RetrievalOfNonExistingNode(
+			throw new RetrievalOfNonExistingNodeException(
 					"Trying to remove non-existing victim node(" + nodeId
 							+ ") from watching node (" + this.nodeId + ")");
 
@@ -72,6 +81,17 @@ public class WatchingNode extends Node {
 	public void detachNodeFromNetwork(StreamNetwork network) {
 		network.getWatchingNodes().remove(this.nodeId);
 		network.getTracker().increaseAvailableStreamRateByAmount(this.playRate);
+	}
+
+	public void addPacketSetToUploadBuffer(PacketSet set)
+			throws BufferOverflowException,
+			AdditionOfOutdatedPacketSetException {
+		addPacketSetToBuffer(set, this.uploadBuffer);
+	}
+
+	public void removePacketSetFromUploadBuffer()
+			throws BufferUnderflowException {
+		removePacketSetFromBuffer(this.uploadBuffer);
 	}
 
 }

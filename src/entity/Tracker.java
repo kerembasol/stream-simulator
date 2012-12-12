@@ -26,14 +26,16 @@ public class Tracker {
 		return playRate.intValue() <= availableStreamRate.intValue();
 	}
 
-	public List getAvailableSetOfWatchingNodesForVictim(Integer playStartTime,
-			Integer playRate, Integer watchDuration, StreamNetwork network) {
-		SortedMap tmpWns = new TreeMap();
+	public List<WatchingNode> getAvailableSetOfWatchingNodesForVictim(
+			Integer playStartTime, Integer playRate, Integer watchDuration,
+			StreamNetwork network) {
+		SortedMap<Integer, WatchingNode> tmpWns = new TreeMap<Integer, WatchingNode>();
 		tmpWns.putAll(network.getWatchingNodes());
-		List resultList = new ArrayList();
-		for (Iterator iterator = tmpWns.keySet().iterator(); iterator.hasNext();) {
-			Integer wnId = (Integer) iterator.next();
-			WatchingNode wn = (WatchingNode) tmpWns.get(wnId);
+		List<WatchingNode> resultList = new ArrayList<WatchingNode>();
+		for (Iterator<Integer> iterator = tmpWns.keySet().iterator(); iterator
+				.hasNext();) {
+			Integer wnId = iterator.next();
+			WatchingNode wn = tmpWns.get(wnId);
 			if (wn.getPlayStartTime().intValue() <= playStartTime.intValue()) {
 				resultList.add(tmpWns.get(wnId));
 			}
@@ -46,10 +48,11 @@ public class Tracker {
 		}
 	}
 
-	private Integer getTotalUploadRate(List wns) {
+	private Integer getTotalUploadRate(List<WatchingNode> wns) {
 		Integer rate = new Integer(0);
-		for (Iterator iterator = wns.iterator(); iterator.hasNext();) {
-			WatchingNode wn = (WatchingNode) iterator.next();
+		for (Iterator<WatchingNode> iterator = wns.iterator(); iterator
+				.hasNext();) {
+			WatchingNode wn = iterator.next();
 			rate = Integer.valueOf(rate.intValue()
 					+ wn.getUploadRate().intValue());
 		}

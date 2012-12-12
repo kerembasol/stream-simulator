@@ -3,10 +3,14 @@
  */
 package event;
 
+import java.nio.BufferOverflowException;
+
 import simulator.StreamNetwork;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfOutdatedPacketSetException;
+import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
-import exception.RetrievalOfNonExistingNode;
+import exception.RetrievalOfNonExistingNodeException;
 
 /**
  * @author kerem
@@ -25,8 +29,14 @@ public abstract class Event implements Comparable<Event> {
 
 	public abstract void execute(StreamNetwork network)
 			throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNode,
-			NotEnoughAvailableTrackerStreamException;
+			RetrievalOfNonExistingNodeException,
+			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
+			AdditionOfOutdatedPacketSetException,
+			InconsistentPacketAdditionToSetByTime,
+			RetrievalOfNonExistingNodeException,
+			exception.BufferOverflowException,
+			AdditionOfOutdatedPacketSetException,
+			InconsistentPacketAdditionToSetByTime;
 
 	public abstract boolean isCompleted(int currentTime);
 

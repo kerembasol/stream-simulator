@@ -8,14 +8,14 @@ import java.util.TreeMap;
 
 import simulator.StreamNetwork;
 import exception.AdditionOfAlreadyExistingNodeException;
-import exception.RetrievalOfNonExistingNode;
+import exception.RetrievalOfNonExistingNodeException;
 
 // Referenced classes of package entity:
 //            Node, WatchingNode
 
 public class VictimNode extends Node {
 
-	private final SortedMap watchingNodes = new TreeMap();
+	private final SortedMap<Integer, WatchingNode> watchingNodes = new TreeMap<Integer, WatchingNode>();
 
 	public VictimNode(Integer nodeId, Integer playStartTime, Integer playRate,
 			Integer watchDuration) {
@@ -35,12 +35,12 @@ public class VictimNode extends Node {
 
 	@Override
 	public void detachNodeFromNetwork(StreamNetwork network)
-			throws RetrievalOfNonExistingNode {
-		List wns = getMapAsList();
+			throws RetrievalOfNonExistingNodeException {
+		List<WatchingNode> wns = getMapAsList();
 		while (getPlayAmount().intValue() > 0) {
-			Iterator iterator = wns.iterator();
+			Iterator<WatchingNode> iterator = wns.iterator();
 			while (iterator.hasNext()) {
-				WatchingNode wn = (WatchingNode) iterator.next();
+				WatchingNode wn = iterator.next();
 				if (wn.getAvailableUploadAmount().intValue() >= wn
 						.getUploadRate().intValue()) {
 					continue;
@@ -54,17 +54,17 @@ public class VictimNode extends Node {
 			}
 		}
 		WatchingNode wn;
-		for (Iterator iterator1 = wns.iterator(); iterator1.hasNext(); wn
-				.removeVictimNode(nodeId)) {
-			wn = (WatchingNode) iterator1.next();
+		for (Iterator<WatchingNode> iterator1 = wns.iterator(); iterator1
+				.hasNext(); wn.removeVictimNode(nodeId)) {
+			wn = iterator1.next();
 		}
 
 		network.getVictimNodes().remove(nodeId);
 	}
 
-	private List getMapAsList() {
-		List returnList = new ArrayList();
-		for (Iterator iterator = watchingNodes.keySet().iterator(); iterator
+	private List<WatchingNode> getMapAsList() {
+		List<WatchingNode> returnList = new ArrayList<WatchingNode>();
+		for (Iterator<Integer> iterator = watchingNodes.keySet().iterator(); iterator
 				.hasNext(); returnList.add(watchingNodes.get(iterator.next()))) {
 		}
 		return returnList;
