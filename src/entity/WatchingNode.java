@@ -26,10 +26,15 @@ public class WatchingNode extends Node {
 	private Integer availableUploadAmount;
 	private SortedMap<Integer, VictimNode> victimNodes;
 	private List<PacketSet> uploadBuffer;
+	private boolean hasDirectLeecher;
 
-	private static final int UPLOAD_RATE = 15;
-	private static final int UPLOAD_BUFFER_CONSTANT = 20; // # of seconds for
-															// playback
+	private static final int UPLOAD_RATE_PARAM = 5;
+	private static final int UPLOAD_RATE_LEN = 4;
+	private static final int UPLOAD_BUFFER_PARAM = 20; // # of seconds for
+														// playback
+
+	private Integer maxUploadBufferSize;
+	private Integer maxUploadBufferSetSize;
 
 	public WatchingNode(Integer nodeId, Integer playStartTime,
 			Integer playRate, Integer watchDuration) {
@@ -37,11 +42,18 @@ public class WatchingNode extends Node {
 		this.uploadRate = initUploadRate();
 		this.victimNodes = new TreeMap<Integer, VictimNode>();
 		this.availableUploadAmount = uploadRate;
-		this.playbackBuffer = new ArrayList<PacketSet>(UPLOAD_BUFFER_CONSTANT);
+		this.maxUploadBufferSize = getUploadBufferSize();
+		this.maxUploadBufferSetSize = uploadRate - UPLOAD_BUFFER_PARAM;
+		this.uploadBuffer = new ArrayList<PacketSet>(maxUploadBufferSize);
+		this.hasDirectLeecher = false;
 	}
 
 	private Integer initUploadRate() {
-		return Distribution.uniform(UPLOAD_RATE);
+		return (Distribution.uniform(UPLOAD_RATE_LEN) + 1) * UPLOAD_RATE_PARAM;
+	}
+
+	private Integer getUploadBufferSize() {
+		return Distribution.uniform(UPLOAD_BUFFER_PARAM) + 1;
 	}
 
 	public void associateVictimNode(Integer nodeId, VictimNode node)
@@ -85,12 +97,16 @@ public class WatchingNode extends Node {
 
 	public void addPacketSetToUploadBuffer(PacketSet set)
 			throws BufferOverflowException,
-			AdditionOfOutdatedPacketSetException {
-		addPacketSetToBuffer(set, this.uploadBuffer);
+			AdditionOfOutdatedPacketSetException,
+			AdditionOfNewSetWithLargerSetSizeException {
+
+		addPacketSetToBuffer(set, this.uploadBuffer, this.maxUploadBufferSize,
+				this.maxUploadBufferSetSize);
 	}
 
 	public void removePacketSetFromUploadBuffer()
 			throws BufferUnderflowException {
+
 		removePacketSetFromBuffer(this.uploadBuffer);
 	}
 

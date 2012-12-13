@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import util.Distribution;
+import entity.AdditionOfNewSetWithLargerSetSizeException;
 import entity.Node;
 import entity.PacketSet;
 import entity.Tracker;
@@ -35,7 +36,7 @@ public class StreamNetwork {
 	private static StreamNetwork instance = null;
 
 	private static final int WATCH_DURATION_PARAM = 50;
-	private static final int PLAY_RATE_PARAM = 20;
+	private static final int PLAY_RATE_PARAM = 5;
 
 	private StreamNetwork() {
 		tracker = new Tracker();
@@ -59,7 +60,8 @@ public class StreamNetwork {
 			RetrievalOfNonExistingNodeException,
 			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
-			InconsistentPacketAdditionToSetByTime {
+			InconsistentPacketAdditionToSetByTime,
+			AdditionOfNewSetWithLargerSetSizeException {
 
 		if (getNodeById(nodeId) != null)
 			throw new AdditionOfAlreadyExistingNodeException(
@@ -73,10 +75,16 @@ public class StreamNetwork {
 		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
 				.append(" requesting a playback rate of ").append(playRate)
 				.toString());
+
+		// Decide whether the incoming node is going to be a WatchingNode or a
+		// VictimNode
 		if (tracker.hasAvailableBandwith(playRate)) {
+			// For WatchingNode, directly start streaming
 			node = new WatchingNode(nodeId, startTime, playRate, watchDuration);
 			insertWatchingNode(nodeId, (WatchingNode) node);
+
 		} else {
+			// For VictimNode, determine a set of available WatchingNodes
 			List<WatchingNode> wns = tracker
 					.getAvailableSetOfWatchingNodesForVictim(startTime,
 							playRate, watchDuration, this);
@@ -101,25 +109,36 @@ public class StreamNetwork {
 	}
 
 	private Integer getWatchDuration() {
-		return Distribution.uniform(WATCH_DURATION_PARAM);
+		return Distribution.uniform(WATCH_DURATION_PARAM) + 10;
 	}
 
+	/**
+	 * As of now, only fixed playbackrate is considered. (No different channel
+	 * playback such as HD vs normal)
+	 * 
+	 * @return
+	 */
 	private Integer getPlayRate() {
-		return Distribution.uniform(PLAY_RATE_PARAM);
+		return PLAY_RATE_PARAM;
 	}
 
 	public void insertWatchingNode(Integer nodeId, WatchingNode node)
 			throws AdditionOfAlreadyExistingNodeException,
 			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
-			InconsistentPacketAdditionToSetByTime {
+			InconsistentPacketAdditionToSetByTime,
+			AdditionOfNewSetWithLargerSetSizeException {
+
 		if (watchingNodes.containsKey(nodeId))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing watching node");
+
 		node.addPacketSetToPlaybackBuffer(createPacketSet(
 				Simulator.CURRENT_TIME, node.getPlayRate()));
+
 		watchingNodes.put(nodeId, node);
 		tracker.decreaseAvailableStreamRateByAmount(node.getPlayRate());
+
 		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
 				.append(" joined network as a Watching node. Playback rate:")
 				.append(node.getPlayRate()).append(". Available upload rate: ")
@@ -136,6 +155,7 @@ public class StreamNetwork {
 		if (victimNodes.containsKey(nodeId))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing victim node");
+
 		for (WatchingNode wn : wns)
 			if (!watchingNodes.containsKey(wn.getNodeId()))
 				throw new RetrievalOfNonExistingNodeException(
@@ -181,7 +201,15 @@ public class StreamNetwork {
 	}
 
 	public void updateBuffers() {
+		for (Integer intWn : watchingNodes.keySet()) {
+			WatchingNode wn = watchingNodes.get(intWn);
+			wn.updateBuffers();
+		}
 
+		for (Integer intVn : victimNodes.keySet()) {
+			VictimNode vn = victimNodes.get(intVn);
+			vn.updateBuffers();
+		}
 	}
 
 	/**

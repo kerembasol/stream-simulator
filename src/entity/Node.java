@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import simulator.StreamNetwork;
+import util.Distribution;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
 import exception.BufferUnderflowException;
@@ -17,8 +18,11 @@ public abstract class Node implements Comparable<Node> {
 	protected Integer watchDuration;
 	protected Integer playStartTime;
 	protected List<PacketSet> playbackBuffer;
-	private static final int PLAYBACK_BUFFER_CONSTANT = 10; // # of seconds for
+	private static final int PLAYBACK_BUFFER_CONSTANT = 20; // # of seconds for
 															// playback
+
+	protected Integer maxPlaybackBufferLen;
+	protected Integer maxPlaybackBufferSetSize;
 
 	public Node(Integer nodeId, Integer playStartTime, Integer playRate,
 			Integer watchDuration) {
@@ -27,11 +31,15 @@ public abstract class Node implements Comparable<Node> {
 		this.watchDuration = watchDuration;
 		this.playRate = playRate;
 		this.playAmount = Integer.valueOf(0);
-		this.playbackBuffer = new ArrayList<PacketSet>(PLAYBACK_BUFFER_CONSTANT);
+		this.maxPlaybackBufferLen = getPlaybackBufferSize();
+		this.maxPlaybackBufferSetSize = 1;
+		this.playbackBuffer = new ArrayList<PacketSet>(maxPlaybackBufferLen);
 	}
 
 	public abstract void detachNodeFromNetwork(StreamNetwork streamnetwork)
 			throws RetrievalOfNonExistingNodeException;
+
+	public abstract void updateBuffers();
 
 	@Override
 	public int compareTo(Node n) {
@@ -41,6 +49,10 @@ public abstract class Node implements Comparable<Node> {
 			return nodeId.intValue() <= n.getNodeId().intValue() ? nodeId
 					.intValue() >= n.getNodeId().intValue() ? 0 : -1 : 1;
 		}
+	}
+
+	private Integer getPlaybackBufferSize() {
+		return Distribution.uniform(PLAYBACK_BUFFER_CONSTANT) + 1;
 	}
 
 	public Integer getNodeId() {
@@ -67,16 +79,24 @@ public abstract class Node implements Comparable<Node> {
 		return watchDuration;
 	}
 
-	protected void addPacketSetToBuffer(PacketSet set, List<PacketSet> buffer)
+	protected void addPacketSetToBuffer(PacketSet set, List<PacketSet> buffer,
+			Integer maxSize, Integer maxSetSize)
 			throws BufferOverflowException,
-			AdditionOfOutdatedPacketSetException {
-		if (buffer.size() == PLAYBACK_BUFFER_CONSTANT)
+			AdditionOfOutdatedPacketSetException,
+			AdditionOfNewSetWithLargerSetSizeException {
+		if (buffer.size() == maxSize)
 			throw new BufferOverflowException("Buffer overflow for node:"
 					+ nodeId + " for packet set having time  " + set.getTime());
 		if (buffer.get(buffer.size() - 1).getTime() >= set.getTime())
 			throw new AdditionOfOutdatedPacketSetException(
 					"Adding outdated packet set with time " + set.getTime()
 							+ " to node with id " + nodeId);
+
+		if (set.getSetSize() > maxSetSize)
+			throw new AdditionOfNewSetWithLargerSetSizeException(
+					"Addition of set with size " + set.getSetSize()
+							+ " to node " + this.nodeId
+							+ " with max. allowable setSize " + maxSetSize);
 		buffer.add(set);
 	}
 
@@ -90,12 +110,16 @@ public abstract class Node implements Comparable<Node> {
 
 	public void addPacketSetToPlaybackBuffer(PacketSet set)
 			throws BufferOverflowException,
-			AdditionOfOutdatedPacketSetException {
-		addPacketSetToBuffer(set, this.playbackBuffer);
+			AdditionOfOutdatedPacketSetException,
+			AdditionOfNewSetWithLargerSetSizeException {
+
+		addPacketSetToBuffer(set, this.playbackBuffer,
+				this.maxPlaybackBufferLen, this.maxPlaybackBufferSetSize);
 	}
 
 	public void removePacketSetFromPlaybackBuffer()
 			throws BufferUnderflowException {
+
 		removePacketSetFromBuffer(this.playbackBuffer);
 	}
 }
