@@ -5,6 +5,7 @@ import java.util.List;
 
 import simulator.StreamNetwork;
 import util.Distribution;
+import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
 import exception.BufferUnderflowException;

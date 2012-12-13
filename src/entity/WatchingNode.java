@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import simulator.StreamNetwork;
 import util.Distribution;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
 import exception.BufferUnderflowException;
