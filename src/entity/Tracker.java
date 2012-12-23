@@ -8,7 +8,9 @@ import java.util.TreeMap;
 
 import simulator.StreamNetwork;
 import util.Distribution;
+import exception.AdditionOfAlreadyExistingNodeException;
 import exception.NotEnoughAvailableTrackerStreamException;
+import exception.RetrievalOfNonExistingNodeException;
 
 // Referenced classes of package entity:
 //            WatchingNode
@@ -16,10 +18,14 @@ import exception.NotEnoughAvailableTrackerStreamException;
 public class Tracker {
 
 	private Integer availableStreamRate;
+	
+	private SortedMap<Integer,WatchingNode> victimNodelessWatchingNodes;
+	
 	private static final int AVAILABLE_STREAM_RATE = 150;
 
 	public Tracker() {
 		availableStreamRate = Integer.valueOf(Distribution.uniform(150));
+		victimNodelessWatchingNodes = new TreeMap<Integer, WatchingNode>();
 	}
 
 	public boolean hasAvailableBandwith(Integer playRate) {
@@ -48,7 +54,23 @@ public class Tracker {
 		}
 
 	}
+	
+	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload
+	
 
+	public void addVictimNodelessWatchingNode(WatchingNode wn){
+		if(victimNodelessWatchingNodes.containsKey(wn.getNodeId()))
+			throw new AdditionOfAlreadyExistingNodeException("Trying to add node "+wn.getNodeId()+" to victim nodeless watching node list");
+		victimNodelessWatchingNodes.put(wn.getNodeId(), wn);
+	}
+	
+	public void removeVictimNodelessWatchingNode(Integer id){
+		if(!victimNodelessWatchingNodes.containsKey(id))
+			throw new RetrievalOfNonExistingNodeException("Trying to add node "+id+" from victim nodeless watching node list");
+		
+		victimNodelessWatchingNodes.remove(id);
+	}
+	
 	/**
 	 * This function returns a watching node that has no victim nodes attached
 	 * and available for direct upload for the victim node.
@@ -57,18 +79,14 @@ public class Tracker {
 	 * @param playRate
 	 * @return
 	 */
-	// TODO Tracker should keep track of this instead of iterating through
-	// StreamNetwork instance
+
 	public WatchingNode getImmeadiateAvailableWatchingNode(
 			Integer playStartTime, Integer playRate) {
-		for (Integer i : StreamNetwork.getInstance().getWatchingNodes()
-				.keySet()) {
-			WatchingNode wn = StreamNetwork.getInstance().getWatchingNodes()
-					.get(i);
-			if (wn != null && !wn.getHasDirectVictimNode())
-				return wn;
-		}
 
+		Iterator<Integer> iterator = victimNodelessWatchingNodes.keySet().iterator();
+		if(iterator != null && iterator.hasNext())
+			return victimNodelessWatchingNodes.get(iterator.next());
+		
 		return null;
 	}
 

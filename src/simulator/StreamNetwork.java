@@ -148,6 +148,7 @@ public class StreamNetwork {
 
 		watchingNodes.put(nodeId, node);
 		tracker.decreaseAvailableStreamRateByAmount(node.getPlayRate());
+		tracker.addVictimNodelessWatchingNode(node);
 
 		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
 				.append(" joined network as a Watching node. Playback rate:")
@@ -205,6 +206,7 @@ public class StreamNetwork {
 		victimNodes.put(vn.getNodeId(), vn);
 		wn.associateVictimNode(vn);
 		vn.associateWatchingNode(wn);
+		tracker.removeVictimNodelessWatchingNode(wn.getNodeId());
 
 		System.out.print((new StringBuilder("\tNode "))
 				.append(vn.getNodeId())

@@ -18,7 +18,7 @@ public class OverridingFileBuffer {
 	public OverridingFileBuffer(Integer size, Integer factor) {
 		maxBufferSize = size;
 		writingFactor = factor;
-		fileBuffer = new LinkedList<>();
+		fileBuffer = new LinkedList<File>();
 	}
 
 	public void addPacketSet(PacketSet set) {
@@ -36,5 +36,13 @@ public class OverridingFileBuffer {
 	public void updateBuffer() {
 		for (File f : fileBuffer)
 			f.incrementWriteFactorCount();
+	}
+
+	public Integer getFirstFileTime() {
+		return fileBuffer.getFirst().getFileTime();
+	}
+
+	public Integer getLastFileTime() {
+		return fileBuffer.getLast().getFileTime();
 	}
 }

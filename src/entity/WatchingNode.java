@@ -25,6 +25,8 @@ public class WatchingNode extends Node {
 
 	private Integer uploadRate;
 	private Integer availableUploadAmount;
+	private Integer deflectionPacketNumber;
+	private Integer deflectionTime;
 	private SortedMap<Integer, VictimNode> victimNodes;
 	private List<PacketSet> uploadBuffer;
 	private boolean hasDirectVictimNode;
@@ -47,6 +49,8 @@ public class WatchingNode extends Node {
 		this.maxUploadBufferSetSize = uploadRate - UPLOAD_BUFFER_PARAM;
 		this.uploadBuffer = new ArrayList<PacketSet>(maxUploadBufferSize);
 		this.hasDirectVictimNode = false;
+		this.deflectionPacketNumber = -1;
+		this.deflectionTime = -1;
 	}
 
 	private Integer initUploadRate() {
