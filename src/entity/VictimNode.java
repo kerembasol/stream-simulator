@@ -22,13 +22,13 @@ public class VictimNode extends Node {
 		super(nodeId, playStartTime, playRate, watchDuration);
 	}
 
-	public void associateWatchingNode(Integer nodeId, WatchingNode wn)
+	public void associateWatchingNode(WatchingNode wn)
 			throws AdditionOfAlreadyExistingNodeException {
-		if (watchingNodes.containsKey(nodeId)) {
+		if (watchingNodes.containsKey(wn.getNodeId())) {
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Associating already associated watching node");
 		} else {
-			watchingNodes.put(nodeId, wn);
+			watchingNodes.put(wn.getNodeId(), wn);
 			return;
 		}
 	}

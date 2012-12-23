@@ -27,8 +27,8 @@ public class Tracker {
 	}
 
 	public List<WatchingNode> getAvailableSetOfWatchingNodesForVictim(
-			Integer playStartTime, Integer playRate, Integer watchDuration,
-			StreamNetwork network) {
+			Integer playStartTime, Integer playRate, Integer watchDuration) {
+
 		SortedMap<Integer, WatchingNode> tmpWns = new TreeMap<Integer, WatchingNode>();
 		tmpWns.putAll(network.getWatchingNodes());
 		List<WatchingNode> resultList = new ArrayList<WatchingNode>();
@@ -46,6 +46,30 @@ public class Tracker {
 		} else {
 			return resultList;
 		}
+
+	}
+
+	/**
+	 * This function returns a watching node that has no victim nodes attached
+	 * and available for direct upload for the victim node.
+	 * 
+	 * @param playStartTime
+	 * @param playRate
+	 * @return
+	 */
+	// TODO Tracker should keep track of this instead of iterating through
+	// StreamNetwork instance
+	public WatchingNode getImmeadiateAvailableWatchingNode(
+			Integer playStartTime, Integer playRate) {
+		for (Integer i : StreamNetwork.getInstance().getWatchingNodes()
+				.keySet()) {
+			WatchingNode wn = StreamNetwork.getInstance().getWatchingNodes()
+					.get(i);
+			if (wn != null && !wn.getHasDirectVictimNode())
+				return wn;
+		}
+
+		return null;
 	}
 
 	private Integer getTotalUploadRate(List<WatchingNode> wns) {

@@ -27,7 +27,7 @@ public class WatchingNode extends Node {
 	private Integer availableUploadAmount;
 	private SortedMap<Integer, VictimNode> victimNodes;
 	private List<PacketSet> uploadBuffer;
-	private boolean hasDirectLeecher;
+	private boolean hasDirectVictimNode;
 
 	private static final int UPLOAD_RATE_PARAM = 5;
 	private static final int UPLOAD_RATE_LEN = 4;
@@ -46,7 +46,7 @@ public class WatchingNode extends Node {
 		this.maxUploadBufferSize = getUploadBufferSize();
 		this.maxUploadBufferSetSize = uploadRate - UPLOAD_BUFFER_PARAM;
 		this.uploadBuffer = new ArrayList<PacketSet>(maxUploadBufferSize);
-		this.hasDirectLeecher = false;
+		this.hasDirectVictimNode = false;
 	}
 
 	private Integer initUploadRate() {
@@ -57,14 +57,14 @@ public class WatchingNode extends Node {
 		return Distribution.uniform(UPLOAD_BUFFER_PARAM) + 1;
 	}
 
-	public void associateVictimNode(Integer nodeId, VictimNode node)
+	public void associateVictimNode(VictimNode node)
 			throws AdditionOfAlreadyExistingNodeException {
 
-		if (victimNodes.containsKey(nodeId))
+		if (victimNodes.containsKey(node.getNodeId()))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Associating already associated victim node");
 
-		victimNodes.put(nodeId, node);
+		victimNodes.put(node.getNodeId(), node);
 	}
 
 	public Integer getUploadRate() {
@@ -109,6 +109,10 @@ public class WatchingNode extends Node {
 			throws BufferUnderflowException {
 
 		removePacketSetFromBuffer(this.uploadBuffer);
+	}
+
+	public boolean getHasDirectVictimNode() {
+		return hasDirectVictimNode;
 	}
 
 }

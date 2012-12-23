@@ -84,14 +84,24 @@ public class StreamNetwork {
 			insertWatchingNode(nodeId, (WatchingNode) node);
 
 		} else {
-			// For VictimNode, determine a set of available WatchingNodes
-			List<WatchingNode> wns = tracker
-					.getAvailableSetOfWatchingNodesForVictim(startTime,
-							playRate, watchDuration, this);
-			if (wns != null) {
+
+			// If there is an immediately available WatchingNode, attach to it
+			WatchingNode immWn = tracker.getImmeadiateAvailableWatchingNode(
+					startTime, playRate);
+			if (immWn != null) {
 				node = new VictimNode(nodeId, startTime, playRate,
 						watchDuration);
-				insertVictimNode(nodeId, (VictimNode) node, wns);
+				insertVictimNodeBySingleWatchingNode((VictimNode) node, immWn);
+			} else {
+				// For VictimNode, determine a set of available WatchingNodes
+				List<WatchingNode> wns = tracker
+						.getAvailableSetOfWatchingNodesForVictim(startTime,
+								playRate, watchDuration);
+				if (wns != null) {
+					node = new VictimNode(nodeId, startTime, playRate,
+							watchDuration);
+					insertVictimNode(nodeId, (VictimNode) node, wns);
+				}
 			}
 		}
 
@@ -147,12 +157,12 @@ public class StreamNetwork {
 				.append(tracker.getAvailableStreamRate()).toString());
 	}
 
-	public void insertVictimNode(Integer nodeId, VictimNode vn,
+	public void insertVictimNodeByWatchingNodeSet(VictimNode vn,
 			List<WatchingNode> wns)
 			throws AdditionOfAlreadyExistingNodeException,
 			RetrievalOfNonExistingNodeException {
 
-		if (victimNodes.containsKey(nodeId))
+		if (victimNodes.containsKey(vn.getNodeId()))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing victim node");
 
@@ -161,23 +171,47 @@ public class StreamNetwork {
 				throw new RetrievalOfNonExistingNodeException(
 						"Trying to retrieve non-existing watching node");
 
-		victimNodes.put(nodeId, vn);
+		victimNodes.put(vn.getNodeId(), vn);
 		Set<WatchingNode> distributingWns = distributedPlayRateRoundRobin(vn,
 				wns);
 
-		System.out.print((new StringBuilder("\tNode ")).append(nodeId)
+		System.out.print((new StringBuilder("\tNode ")).append(vn.getNodeId())
 				.append(" joined network as a Victim Node. Playback rate : ")
 				.append(vn.getPlayRate())
 				.append(". Stream received from following Watching Nodes : ")
 				.toString());
 		System.out.print("< ");
 		for (WatchingNode wn : distributingWns) {
-			wn.associateVictimNode(nodeId, vn);
-			vn.associateWatchingNode(wn.getNodeId(), wn);
+			wn.associateVictimNode(vn);
+			vn.associateWatchingNode(wn);
 			System.out.print((new StringBuilder("-")).append(wn.getNodeId())
 					.toString());
 		}
 		System.out.println("- >");
+
+	}
+
+	public void insertVictimNodeBySingleWatchingNode(VictimNode vn,
+			WatchingNode wn) throws AdditionOfAlreadyExistingNodeException,
+			RetrievalOfNonExistingNodeException {
+		if (victimNodes.containsKey(vn.getNodeId()))
+			throw new AdditionOfAlreadyExistingNodeException(
+					"Adding already existing victim node");
+
+		if (!watchingNodes.containsKey(wn.getNodeId()))
+			throw new RetrievalOfNonExistingNodeException(
+					"Trying to retrieve non-existing watching node");
+
+		victimNodes.put(vn.getNodeId(), vn);
+		wn.associateVictimNode(vn);
+		vn.associateWatchingNode(wn);
+
+		System.out.print((new StringBuilder("\tNode "))
+				.append(vn.getNodeId())
+				.append(" joined network as a Victim Node. Playback rate : ")
+				.append(vn.getPlayRate())
+				.append(". Stream received from Watching Node : "
+						+ wn.getNodeId()).toString());
 
 	}
 
