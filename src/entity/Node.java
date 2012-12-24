@@ -80,8 +80,8 @@ public abstract class Node implements Comparable<Node> {
 		return watchDuration;
 	}
 
-	protected void addPacketSetToBuffer(PacketSet set, List<PacketSet> buffer,
-			Integer maxSize, Integer maxSetSize)
+	protected List<PacketSet> addPacketSetToBuffer(PacketSet set,
+			List<PacketSet> buffer, Integer maxSize, Integer maxSetSize)
 			throws BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
 			AdditionOfNewSetWithLargerSetSizeException {
@@ -99,14 +99,16 @@ public abstract class Node implements Comparable<Node> {
 							+ " to node " + this.nodeId
 							+ " with max. allowable setSize " + maxSetSize);
 		buffer.add(set);
+		return buffer;
 	}
 
-	protected void removePacketSetFromBuffer(List<PacketSet> buffer)
+	protected List<PacketSet> removePacketSetFromBuffer(List<PacketSet> buffer)
 			throws BufferUnderflowException {
 		if (buffer.size() == 0)
 			throw new BufferUnderflowException("Buffer underflow for node:"
 					+ nodeId);
 		buffer.remove(0);
+		return buffer;
 	}
 
 	public void addPacketSetToPlaybackBuffer(PacketSet set)

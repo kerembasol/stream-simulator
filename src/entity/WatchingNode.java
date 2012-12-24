@@ -3,7 +3,6 @@
  */
 package entity;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -24,41 +23,46 @@ import exception.RetrievalOfNonExistingNodeException;
 public class WatchingNode extends Node {
 
 	private Integer uploadRate;
-	private Integer availableUploadAmount;
+	private Integer availableUploadRate;
 	private Integer deflectionPacketNumber;
 	private Integer deflectionTime;
 	private SortedMap<Integer, VictimNode> victimNodes;
-	private List<PacketSet> uploadBuffer;
-	private boolean hasDirectVictimNode;
+	private SortedMap<Integer, List<PacketSet>> uploadBuffer;
+	private Integer directVictimNodeId;
 
-	private static final int UPLOAD_RATE_PARAM = 5;
-	private static final int UPLOAD_RATE_LEN = 4;
-	private static final int UPLOAD_BUFFER_PARAM = 20; // # of seconds for
-														// playback
+	private static final int UPLOAD_PARAM = 5;
+	private static final int UPLOAD_RATE_PARAM = 4;
+	private static final int LOCAL_FILE_BUFFER_PARAM = 20;
+	private static final int LOCAL_FILE_WRITE_FACTOR_PARAM = 5;
 
-	private Integer maxUploadBufferSize;
-	private Integer maxUploadBufferSetSize;
+	private static final int MAX_UPLOAD_BUFFER_ELEMENT_NO = 1;
+
+	private OverridingFileBuffer localFileBuffer = null;
 
 	public WatchingNode(Integer nodeId, Integer playStartTime,
 			Integer playRate, Integer watchDuration) {
 		super(nodeId, playStartTime, playRate, watchDuration);
 		this.uploadRate = initUploadRate();
+		this.availableUploadRate = uploadRate;
+		this.uploadBuffer = new TreeMap<Integer, List<PacketSet>>();
+		this.localFileBuffer = new OverridingFileBuffer(
+				getLocalFileBufferSize(), getLocalFileWriteFactor());
 		this.victimNodes = new TreeMap<Integer, VictimNode>();
-		this.availableUploadAmount = uploadRate;
-		this.maxUploadBufferSize = getUploadBufferSize();
-		this.maxUploadBufferSetSize = uploadRate - UPLOAD_BUFFER_PARAM;
-		this.uploadBuffer = new ArrayList<PacketSet>(maxUploadBufferSize);
-		this.hasDirectVictimNode = false;
-		this.deflectionPacketNumber = -1;
-		this.deflectionTime = -1;
+		this.directVictimNodeId = -1;
+		initDeflectionValues(getDeflectionTimeAndPacketValues(playStartTime,
+				localFileBuffer.getMaxBufferSize(),
+				localFileBuffer.getWritingFactor()));
 	}
 
 	private Integer initUploadRate() {
-		return (Distribution.uniform(UPLOAD_RATE_LEN) + 1) * UPLOAD_RATE_PARAM;
+		return (Distribution.uniform(UPLOAD_RATE_PARAM) + 1) * UPLOAD_PARAM;
 	}
 
-	private Integer getUploadBufferSize() {
-		return Distribution.uniform(UPLOAD_BUFFER_PARAM) + 1;
+	private void initDeflectionValues(String deflectionStr) {
+		int index = deflectionStr.indexOf("#");
+		this.deflectionPacketNumber = new Integer(deflectionStr.substring(0,
+				index));
+		this.deflectionTime = new Integer(deflectionStr.substring(index + 1));
 	}
 
 	public void associateVictimNode(VictimNode node)
@@ -69,18 +73,7 @@ public class WatchingNode extends Node {
 					"Associating already associated victim node");
 
 		victimNodes.put(node.getNodeId(), node);
-	}
-
-	public Integer getUploadRate() {
-		return uploadRate;
-	}
-
-	public Integer getAvailableUploadAmount() {
-		return availableUploadAmount;
-	}
-
-	public void setAvailableUploadAmount(Integer uploadAmount) {
-		this.availableUploadAmount = uploadAmount;
+		decreaseAvailableUploadRate();
 	}
 
 	public void removeVictimNode(Integer nodeId)
@@ -91,6 +84,7 @@ public class WatchingNode extends Node {
 							+ ") from watching node (" + this.nodeId + ")");
 
 		victimNodes.remove(nodeId);
+		increaseAvailableUploadRate();
 	}
 
 	// TODO victimNode behavior is to be determined
@@ -100,23 +94,98 @@ public class WatchingNode extends Node {
 		network.getTracker().increaseAvailableStreamRateByAmount(this.playRate);
 	}
 
-	public void addPacketSetToUploadBuffer(PacketSet set)
+	public void addPacketSetToUploadBuffer(VictimNode vn, PacketSet set)
 			throws BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
 			AdditionOfNewSetWithLargerSetSizeException {
 
-		addPacketSetToBuffer(set, this.uploadBuffer, this.maxUploadBufferSize,
-				this.maxUploadBufferSetSize);
+		List<PacketSet> vnPacketSetList = this.uploadBuffer.get(vn.getNodeId());
+		vnPacketSetList = addPacketSetToBuffer(set, vnPacketSetList,
+				MAX_UPLOAD_BUFFER_ELEMENT_NO, this.maxPlaybackBufferSetSize);
+		uploadBuffer.put(vn.getNodeId(), vnPacketSetList);
 	}
 
-	public void removePacketSetFromUploadBuffer()
+	public void removePacketSetFromUploadBuffer(VictimNode vn)
 			throws BufferUnderflowException {
 
-		removePacketSetFromBuffer(this.uploadBuffer);
+		List<PacketSet> vnPacketSetList = this.uploadBuffer.get(vn.getNodeId());
+		vnPacketSetList = removePacketSetFromBuffer(vnPacketSetList);
+
 	}
 
 	public boolean getHasDirectVictimNode() {
-		return hasDirectVictimNode;
+		return this.directVictimNodeId.intValue() != -1;
+	}
+
+	private String getDeflectionTimeAndPacketValues(int startTime,
+			int bufferSize, int factor) {
+		int bufStart = startTime;
+		int bufEnd = startTime;
+
+		int print = startTime;
+		for (int i = 0, factorCount = 1; i < bufferSize; i++, bufEnd++, factorCount++) {
+			if (factorCount == factor) {
+				// System.out.println((bufEnd) + "-" + (print++));
+				factorCount = 0;
+			}
+		}
+
+		print--;
+		print = getNextPrint(bufStart, factor, print);
+		bufStart++;
+		int deflectionPacket = -1;
+		int deflectionTime = -1;
+		for (int factorCount = 1;; factorCount++, bufStart++, bufEnd++) {
+			if (factorCount == factor) {
+				// System.out.println(bufEnd + "-" + print);
+				if (isDeflectionPoint(bufStart, factor, print)) {
+					deflectionPacket = bufStart + factor;
+					deflectionTime = bufEnd;
+					break;
+				}
+				++print;
+				factorCount = 0;
+			}
+		}
+
+		return deflectionPacket + "#" + deflectionTime;
+	}
+
+	private boolean isDeflectionPoint(int bufStart, int factor, int curPrint) {
+		return bufStart + factor > curPrint;
+	}
+
+	private static int getNextPrint(int bufStart, int factor, int curPrint) {
+		int returnVal;
+		if (bufStart + factor > curPrint) {
+			returnVal = bufStart + factor;
+		} else
+			returnVal = ++curPrint;
+		return returnVal;
+	}
+
+	public Integer getUploadRate() {
+		return uploadRate;
+	}
+
+	public Integer getAvailableUploadRate() {
+		return availableUploadRate;
+	}
+
+	private void decreaseAvailableUploadRate() {
+		this.availableUploadRate -= UPLOAD_PARAM;
+	}
+
+	private void increaseAvailableUploadRate() {
+		this.availableUploadRate += UPLOAD_PARAM;
+	}
+
+	private Integer getLocalFileBufferSize() {
+		return Distribution.uniform(LOCAL_FILE_BUFFER_PARAM) + 1;
+	}
+
+	private Integer getLocalFileWriteFactor() {
+		return Distribution.uniform(LOCAL_FILE_WRITE_FACTOR_PARAM) + 1;
 	}
 
 }

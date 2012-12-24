@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import simulator.StreamNetwork;
 import util.Distribution;
 import exception.AdditionOfAlreadyExistingNodeException;
 import exception.NotEnoughAvailableTrackerStreamException;
@@ -18,9 +17,9 @@ import exception.RetrievalOfNonExistingNodeException;
 public class Tracker {
 
 	private Integer availableStreamRate;
-	
-	private SortedMap<Integer,WatchingNode> victimNodelessWatchingNodes;
-	
+
+	private SortedMap<Integer, WatchingNode> victimNodelessWatchingNodes;
+
 	private static final int AVAILABLE_STREAM_RATE = 150;
 
 	public Tracker() {
@@ -54,23 +53,28 @@ public class Tracker {
 		}
 
 	}
-	
-	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload
-	
 
-	public void addVictimNodelessWatchingNode(WatchingNode wn){
-		if(victimNodelessWatchingNodes.containsKey(wn.getNodeId()))
-			throw new AdditionOfAlreadyExistingNodeException("Trying to add node "+wn.getNodeId()+" to victim nodeless watching node list");
+	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload() {
+	}
+
+	public void addVictimNodelessWatchingNode(WatchingNode wn)
+			throws AdditionOfAlreadyExistingNodeException {
+		if (victimNodelessWatchingNodes.containsKey(wn.getNodeId()))
+			throw new AdditionOfAlreadyExistingNodeException(
+					"Trying to add node " + wn.getNodeId()
+							+ " to victim nodeless watching node list");
 		victimNodelessWatchingNodes.put(wn.getNodeId(), wn);
 	}
-	
-	public void removeVictimNodelessWatchingNode(Integer id){
-		if(!victimNodelessWatchingNodes.containsKey(id))
-			throw new RetrievalOfNonExistingNodeException("Trying to add node "+id+" from victim nodeless watching node list");
-		
+
+	public void removeVictimNodelessWatchingNode(Integer id)
+			throws RetrievalOfNonExistingNodeException {
+		if (!victimNodelessWatchingNodes.containsKey(id))
+			throw new RetrievalOfNonExistingNodeException("Trying to add node "
+					+ id + " from victim nodeless watching node list");
+
 		victimNodelessWatchingNodes.remove(id);
 	}
-	
+
 	/**
 	 * This function returns a watching node that has no victim nodes attached
 	 * and available for direct upload for the victim node.
@@ -83,10 +87,11 @@ public class Tracker {
 	public WatchingNode getImmeadiateAvailableWatchingNode(
 			Integer playStartTime, Integer playRate) {
 
-		Iterator<Integer> iterator = victimNodelessWatchingNodes.keySet().iterator();
-		if(iterator != null && iterator.hasNext())
+		Iterator<Integer> iterator = victimNodelessWatchingNodes.keySet()
+				.iterator();
+		if (iterator != null && iterator.hasNext())
 			return victimNodelessWatchingNodes.get(iterator.next());
-		
+
 		return null;
 	}
 

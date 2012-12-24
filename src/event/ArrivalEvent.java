@@ -7,6 +7,7 @@ import simulator.Simulator;
 import simulator.StreamNetwork;
 import entity.Node;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
 import exception.InconsistentPacketAdditionToSetByTime;
@@ -29,7 +30,8 @@ public class ArrivalEvent extends Event {
 			NotEnoughAvailableTrackerStreamException,
 			RetrievalOfNonExistingNodeException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
-			InconsistentPacketAdditionToSetByTime {
+			InconsistentPacketAdditionToSetByTime,
+			AdditionOfNewSetWithLargerSetSizeException {
 
 		System.out.println("Executing arrival event (start : " + startTime
 				+ ", NodeId:" + nodeId + ")");

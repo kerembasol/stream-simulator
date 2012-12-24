@@ -45,4 +45,13 @@ public class OverridingFileBuffer {
 	public Integer getLastFileTime() {
 		return fileBuffer.getLast().getFileTime();
 	}
+
+	public Integer getWritingFactor() {
+		return writingFactor;
+	}
+
+	public Integer getMaxBufferSize() {
+		return maxBufferSize;
+	}
+
 }
