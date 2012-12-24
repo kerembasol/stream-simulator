@@ -24,7 +24,6 @@ public abstract class Event implements Comparable<Event> {
 	public Event(Integer time, Integer id) {
 		nodeId = id;
 		startTime = time;
-
 	}
 
 	public abstract void execute(StreamNetwork network)

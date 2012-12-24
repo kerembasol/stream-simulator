@@ -1,6 +1,5 @@
 package entity;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -8,6 +7,7 @@ import java.util.TreeMap;
 
 import util.Distribution;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
 import exception.RetrievalOfNonExistingNodeException;
 
@@ -31,30 +31,36 @@ public class Tracker {
 		return playRate.intValue() <= availableStreamRate.intValue();
 	}
 
-	public List<WatchingNode> getAvailableSetOfWatchingNodesForVictim(
-			Integer playStartTime, Integer playRate, Integer watchDuration) {
+	// public List<WatchingNode> getAvailableSetOfWatchingNodesForVictim(
+	// Integer playStartTime, Integer playRate, Integer watchDuration) {
+	//
+	// SortedMap<Integer, WatchingNode> tmpWns = new TreeMap<Integer,
+	// WatchingNode>();
+	// tmpWns.putAll(network.getWatchingNodes());
+	// List<WatchingNode> resultList = new ArrayList<WatchingNode>();
+	// for (Iterator<Integer> iterator = tmpWns.keySet().iterator(); iterator
+	// .hasNext();) {
+	// Integer wnId = iterator.next();
+	// WatchingNode wn = tmpWns.get(wnId);
+	// if (wn.getPlayStartTime().intValue() <= playStartTime.intValue()) {
+	// resultList.add(tmpWns.get(wnId));
+	// }
+	// }
+	//
+	// if (getTotalUploadRate(resultList).intValue() < playRate.intValue()) {
+	// return null;
+	// } else {
+	// return resultList;
+	// }
+	//
+	// }
 
-		SortedMap<Integer, WatchingNode> tmpWns = new TreeMap<Integer, WatchingNode>();
-		tmpWns.putAll(network.getWatchingNodes());
-		List<WatchingNode> resultList = new ArrayList<WatchingNode>();
-		for (Iterator<Integer> iterator = tmpWns.keySet().iterator(); iterator
-				.hasNext();) {
-			Integer wnId = iterator.next();
-			WatchingNode wn = tmpWns.get(wnId);
-			if (wn.getPlayStartTime().intValue() <= playStartTime.intValue()) {
-				resultList.add(tmpWns.get(wnId));
-			}
-		}
-
-		if (getTotalUploadRate(resultList).intValue() < playRate.intValue()) {
-			return null;
-		} else {
-			return resultList;
-		}
-
-	}
-
-	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload() {
+	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload(
+			Integer playStartTime, Integer playRate) {
+		
+		
+		
+		return null;
 	}
 
 	public void addVictimNodelessWatchingNode(WatchingNode wn)
@@ -128,4 +134,12 @@ public class Tracker {
 	public Integer getAvailableStreamRate() {
 		return availableStreamRate;
 	}
+
+	public PacketSet createPacketSet(Integer time, Integer playRate)
+			throws InconsistentPacketAdditionToSetByTime {
+		PacketSet set = new PacketSet(time, playRate);
+		set.fillPacketSet(time, playRate);
+		return set;
+	}
+
 }

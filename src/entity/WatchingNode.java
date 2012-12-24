@@ -74,6 +74,8 @@ public class WatchingNode extends Node {
 
 		victimNodes.put(node.getNodeId(), node);
 		decreaseAvailableUploadRate();
+		if (this.directVictimNodeId == -1)
+			this.directVictimNodeId = node.getNodeId();
 	}
 
 	public void removeVictimNode(Integer nodeId)

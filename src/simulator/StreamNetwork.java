@@ -11,7 +11,6 @@ import java.util.TreeSet;
 
 import util.Distribution;
 import entity.Node;
-import entity.PacketSet;
 import entity.Tracker;
 import entity.VictimNode;
 import entity.WatchingNode;
@@ -92,11 +91,12 @@ public class StreamNetwork {
 				node = new VictimNode(nodeId, startTime, playRate,
 						watchDuration);
 				insertVictimNodeBySingleWatchingNode((VictimNode) node, immWn);
+				tracker.removeVictimNodelessWatchingNode(node.getNodeId());
 			} else {
 				// For VictimNode, determine a set of available WatchingNodes
 				List<WatchingNode> wns = tracker
 						.getAvailableSetOfWatchingNodesForVictim(startTime,
-								playRate, watchDuration);
+								playRate);
 				if (wns != null) {
 					node = new VictimNode(nodeId, startTime, playRate,
 							watchDuration);
@@ -106,30 +106,6 @@ public class StreamNetwork {
 		}
 
 		return node;
-	}
-
-	public Node getNodeById(Integer nodeId) {
-		if (watchingNodes.containsKey(nodeId))
-			return watchingNodes.get(nodeId);
-
-		if (victimNodes.containsKey(nodeId))
-			return victimNodes.get(nodeId);
-
-		return null;
-	}
-
-	private Integer getWatchDuration() {
-		return Distribution.uniform(WATCH_DURATION_PARAM) + 10;
-	}
-
-	/**
-	 * As of now, only fixed playbackrate is considered. (No different channel
-	 * playback such as HD vs normal)
-	 * 
-	 * @return
-	 */
-	private Integer getPlayRate() {
-		return PLAY_RATE_PARAM;
 	}
 
 	public void insertWatchingNode(Integer nodeId, WatchingNode node)
@@ -143,7 +119,7 @@ public class StreamNetwork {
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing watching node");
 
-		node.addPacketSetToPlaybackBuffer(createPacketSet(
+		node.addPacketSetToPlaybackBuffer(tracker.createPacketSet(
 				Simulator.CURRENT_TIME, node.getPlayRate()));
 
 		watchingNodes.put(nodeId, node);
@@ -248,6 +224,30 @@ public class StreamNetwork {
 		}
 	}
 
+	public Node getNodeById(Integer nodeId) {
+		if (watchingNodes.containsKey(nodeId))
+			return watchingNodes.get(nodeId);
+
+		if (victimNodes.containsKey(nodeId))
+			return victimNodes.get(nodeId);
+
+		return null;
+	}
+
+	private Integer getWatchDuration() {
+		return Distribution.uniform(WATCH_DURATION_PARAM) + 10;
+	}
+
+	/**
+	 * As of now, only fixed playbackrate is considered. (No different channel
+	 * playback such as HD vs normal)
+	 * 
+	 * @return
+	 */
+	private Integer getPlayRate() {
+		return PLAY_RATE_PARAM;
+	}
+
 	/**
 	 * @return the watchingNodes
 	 */
@@ -264,13 +264,6 @@ public class StreamNetwork {
 
 	public Tracker getTracker() {
 		return tracker;
-	}
-
-	public PacketSet createPacketSet(Integer time, Integer playRate)
-			throws InconsistentPacketAdditionToSetByTime {
-		PacketSet set = new PacketSet(time, playRate);
-		set.fillPacketSet(time, playRate);
-		return set;
 	}
 
 }
