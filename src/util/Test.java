@@ -4,6 +4,8 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -15,14 +17,16 @@ public class Test {
 	public Integer id;
 	public List<Integer> time = new ArrayList<Integer>();
 	public List<Integer> piece = new ArrayList<Integer>();
+	public Integer factor;
 
 	public Test(Integer id, Integer deflPiece, Integer deflTime,
 			Integer factor, Integer lastTime) {
 		this.id = id;
 		for (Integer i = deflPiece, j = deflTime; j <= lastTime; i += factor, j += factor) {
-			time.add(deflTime);
-			piece.add(deflPiece);
+			time.add(j);
+			piece.add(i);
 		}
+		this.factor = factor;
 	}
 
 	/**
@@ -46,24 +50,86 @@ public class Test {
 		list.add(st3);
 		list.add(st4);
 
+		st1.printStreamForVictim(list, 39);
+
 	}
 
 	private void printStreamForVictim(List<Test> list, Integer joinTime) {
 		List<Test> stream = new ArrayList<Test>();
 
-		Test first = getFirstTestWithAvailablePiece(list);
-
-		while (!isValidStream()) {
-
+		// getFirstTestWithAvailablePiece()
+		Integer minTime = Integer.MAX_VALUE;
+		Test firstAvailableTest = null;
+		for (int i = 0; i < list.size(); i++) {
+			Test t = list.get(i);
+			Integer tempMin = getMinAvailableTimeForPieceByGivenTime(t,
+					joinTime);
+			if (tempMin < minTime) {
+				minTime = tempMin;
+				firstAvailableTest = t;
+			}
 		}
+
+		if (firstAvailableTest == null) {
+			System.out.println("No available node");
+			return;
+		}
+
+		HashMap<Integer, Test> streamMembers = new LinkedHashMap<Integer, Test>();
+		streamMembers.put(firstAvailableTest.id, firstAvailableTest);
+
+		List<Test> sameFactorTests = getOtherTestsByFactor(list,
+				firstAvailableTest.factor, firstAvailableTest.id);
+
+		streamMembers = addOtherAvailableTests(sameFactorTests, streamMembers,
+				joinTime, minTime, firstAvailableTest.factor);
+
+		if (streamMembers == null)
+			System.out.println("No available stream");
+		else
+			System.out.println(streamMembers.keySet());
+
 	}
 
-	private Test getFirstTestWithAvailablePiece(List<Test> list,
+	private List<Test> getOtherTestsByFactor(List<Test> list, Integer factor,
+			Integer id) {
+		List<Test> returnList = new ArrayList<Test>();
+		for (Test t : list)
+			if (t.factor == factor && t.id != id)
+				returnList.add(t);
+		return returnList;
+	}
+
+	private HashMap<Integer, Test> addOtherAvailableTests(List<Test> list,
+			HashMap<Integer, Test> streamMembers, Integer searchedPiece,
+			Integer timeLimit, Integer factor) {
+
+		for (Test t : list) {
+			if (!streamMembers.containsKey(t.id)) {
+				int i = 0;
+				while (t.time.get(i) <= timeLimit) {
+					if (t.piece.get(i) == searchedPiece + streamMembers.size()) {
+						streamMembers.put(t.id, t);
+						break;
+					}
+					i++;
+				}
+			}
+		}
+
+		if (streamMembers.size() == factor)
+			return streamMembers;
+		return null;
+	}
+
+	private Integer getMinAvailableTimeForPieceByGivenTime(Test t,
 			Integer joinTime) {
 
-	}
+		for (int i = 0; i < t.piece.size(); i++)
+			if (t.piece.get(i) == joinTime)
+				return t.time.get(i);
 
-	private boolean isValidStream() {
+		return Integer.MAX_VALUE;
 
 	}
 

@@ -4,10 +4,8 @@
 package simulator;
 
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import util.Distribution;
 import entity.Node;
@@ -100,8 +98,11 @@ public class StreamNetwork {
 				if (wns != null) {
 					node = new VictimNode(nodeId, startTime, playRate,
 							watchDuration);
-					insertVictimNode(nodeId, (VictimNode) node, wns);
-				}
+					insertVictimNodeByWatchingNodeSet((VictimNode) node, wns);
+				} else
+					System.out
+							.println("No available set of watching nodes with a valid stream for the victim "
+									+ nodeId + " joining at " + startTime);
 			}
 		}
 
@@ -149,8 +150,8 @@ public class StreamNetwork {
 						"Trying to retrieve non-existing watching node");
 
 		victimNodes.put(vn.getNodeId(), vn);
-		Set<WatchingNode> distributingWns = distributedPlayRateRoundRobin(vn,
-				wns);
+		// Set<WatchingNode> distributingWns = distributedPlayRateRoundRobin(vn,
+		// wns);
 
 		System.out.print((new StringBuilder("\tNode ")).append(vn.getNodeId())
 				.append(" joined network as a Victim Node. Playback rate : ")
@@ -158,7 +159,7 @@ public class StreamNetwork {
 				.append(". Stream received from following Watching Nodes : ")
 				.toString());
 		System.out.print("< ");
-		for (WatchingNode wn : distributingWns) {
+		for (WatchingNode wn : wns) {
 			wn.associateVictimNode(vn);
 			vn.associateWatchingNode(wn);
 			System.out.print((new StringBuilder("-")).append(wn.getNodeId())
@@ -193,24 +194,24 @@ public class StreamNetwork {
 
 	}
 
-	private Set<WatchingNode> distributedPlayRateRoundRobin(VictimNode vn,
-			List<WatchingNode> candidateWns) {
-		Integer playAmount = 0;
-
-		Set<WatchingNode> distributingWns = new TreeSet<WatchingNode>();
-		while (playAmount < vn.getPlayRate()) {
-			for (WatchingNode wn : candidateWns) {
-				if (wn.getAvailableUploadAmount() > 0) {
-					wn.setAvailableUploadAmount(wn.getAvailableUploadAmount() - 1);
-					vn.setPlayAmount(vn.getPlayAmount() + 1);
-					distributingWns.add(wn);
-					if (vn.getPlayAmount() == vn.getPlayRate())
-						break;
-				}
-			}
-		}
-		return distributingWns;
-	}
+	// private Set<WatchingNode> distributedPlayRateRoundRobin(VictimNode vn,
+	// List<WatchingNode> candidateWns) {
+	// Integer playAmount = 0;
+	//
+	// Set<WatchingNode> distributingWns = new TreeSet<WatchingNode>();
+	// while (playAmount < vn.getPlayRate()) {
+	// for (WatchingNode wn : candidateWns) {
+	// if (wn.getAvailableUploadAmount() > 0) {
+	// wn.setAvailableUploadAmount(wn.getAvailableUploadAmount() - 1);
+	// vn.setPlayAmount(vn.getPlayAmount() + 1);
+	// distributingWns.add(wn);
+	// if (vn.getPlayAmount() == vn.getPlayRate())
+	// break;
+	// }
+	// }
+	// }
+	// return distributingWns;
+	// }
 
 	public void updateBuffers() {
 		for (Integer intWn : watchingNodes.keySet()) {

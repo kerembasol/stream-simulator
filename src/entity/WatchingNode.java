@@ -119,6 +119,29 @@ public class WatchingNode extends Node {
 		return this.directVictimNodeId.intValue() != -1;
 	}
 
+	public Integer getClosestPacketNumberForGivenPlaybackTime(Integer time) {
+		if (this.deflectionPacketNumber > time)
+			return null;
+
+		int iteration = (time - this.deflectionPacketNumber)
+				/ this.localFileBuffer.getWritingFactor();
+		return this.deflectionPacketNumber
+				+ (this.localFileBuffer.getWritingFactor() * iteration);
+
+	}
+
+	public Integer getClosestPacketTimeForGivenPlaybackTime(Integer time) {
+		if (this.deflectionPacketNumber > time)
+			return null;
+
+		int iteration = (time - this.deflectionPacketNumber)
+				/ this.localFileBuffer.getWritingFactor();
+
+		return this.deflectionTime
+				+ (this.localFileBuffer.getWritingFactor() * iteration);
+
+	}
+
 	private String getDeflectionTimeAndPacketValues(int startTime,
 			int bufferSize, int factor) {
 		int bufStart = startTime;
@@ -188,6 +211,10 @@ public class WatchingNode extends Node {
 
 	private Integer getLocalFileWriteFactor() {
 		return Distribution.uniform(LOCAL_FILE_WRITE_FACTOR_PARAM) + 1;
+	}
+
+	public OverridingFileBuffer getLocalFileBuffer() {
+		return localFileBuffer;
 	}
 
 }

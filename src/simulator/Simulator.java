@@ -12,6 +12,7 @@ import util.Distribution;
 import event.ArrivalEvent;
 import event.Event;
 import exception.AdditionOfAlreadyExistingNodeException;
+import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
 import exception.InconsistentPacketAdditionToSetByTime;
@@ -40,14 +41,14 @@ public class Simulator {
 	public Simulator() {
 		simulationEvents = new TreeMap<Integer, List<Event>>();
 		network = StreamNetwork.getInstance();
-
 	}
 
 	public void runSimulation() throws AdditionOfAlreadyExistingNodeException,
 			RetrievalOfNonExistingNodeException,
 			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
-			InconsistentPacketAdditionToSetByTime {
+			InconsistentPacketAdditionToSetByTime,
+			AdditionOfNewSetWithLargerSetSizeException {
 
 		generateEvents();
 		while (CURRENT_TIME <= SIMULATION_LENGTH) {

@@ -1,18 +1,19 @@
 package entity;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import simulator.StreamNetwork;
 import util.Distribution;
 import exception.AdditionOfAlreadyExistingNodeException;
 import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
 import exception.RetrievalOfNonExistingNodeException;
-
-// Referenced classes of package entity:
-//            WatchingNode
 
 public class Tracker {
 
@@ -55,11 +56,115 @@ public class Tracker {
 	//
 	// }
 
-	public List<WatchingNode> getCandidateWatchingNodesForBufferUpload(
+	private HashMap<Integer, WatchingNode> addOtherWNsMatchingStreamCriteria(
+			List<WatchingNode> list,
+			HashMap<Integer, WatchingNode> streamMembers,
+			Integer searchedPiece, Integer timeLimit, Integer factor) {
+
+		for (WatchingNode wn : list) {
+			if (!streamMembers.containsKey(wn.getNodeId())) {
+
+				Integer minTime = wn
+						.getClosestPacketTimeForGivenPlaybackTime(searchedPiece);
+
+				if (minTime <= timeLimit) {
+					Integer minPacket = wn
+							.getClosestPacketNumberForGivenPlaybackTime(searchedPiece);
+					minPacket += wn.getLocalFileBuffer().getWritingFactor();
+
+					if (minPacket == searchedPiece + streamMembers.size()) {
+						streamMembers.put(wn.getNodeId(), wn);
+						if (streamMembers.size() == factor)
+							break;
+					}
+				}
+			}
+		}
+
+		if (streamMembers.size() <= factor)
+			return null;
+		return streamMembers;
+	}
+
+	private List<WatchingNode> getOtherCandidateWNsByFactor(
+			List<WatchingNode> list, Integer factor, Integer id) {
+		List<WatchingNode> returnList = new ArrayList<WatchingNode>();
+		for (WatchingNode wn : list)
+			if (wn.getLocalFileBuffer().getWritingFactor() == factor
+					&& wn.getNodeId() != id)
+				returnList.add(wn);
+		return returnList;
+	}
+
+	private Integer getMinAvailableTimeForPieceByGivenTime(WatchingNode wn,
+			Integer joinTime) {
+
+		Integer minPacket = wn
+				.getClosestPacketNumberForGivenPlaybackTime(joinTime);
+		if (minPacket != joinTime)
+			return Integer.MAX_VALUE;
+
+		return wn.getClosestPacketTimeForGivenPlaybackTime(joinTime);
+	}
+
+	private List<WatchingNode> getWatchingNodesWithAvailableUploadRates(
+			Integer playRate) {
+
+		SortedMap<Integer, WatchingNode> all = StreamNetwork.getInstance()
+				.getWatchingNodes();
+		Iterator<Integer> iterator = all.keySet().iterator();
+
+		List<WatchingNode> returnList = new ArrayList<WatchingNode>();
+		while (iterator.hasNext()) {
+			WatchingNode wn = all.get(iterator.next());
+			if (wn.getHasDirectVictimNode()
+					&& wn.getAvailableUploadRate() >= playRate)
+				returnList.add(wn);
+		}
+
+		return returnList;
+	}
+
+	public List<WatchingNode> getAvailableSetOfWatchingNodesForVictim(
 			Integer playStartTime, Integer playRate) {
-		
-		
-		
+
+		// get first Watching Node with an available piece
+		Integer minTime = Integer.MAX_VALUE;
+		List<WatchingNode> candidateWNs = getWatchingNodesWithAvailableUploadRates(playRate);
+		WatchingNode firstAvailableWN = null;
+		for (int i = 0; i < candidateWNs.size(); i++) {
+			WatchingNode wn = candidateWNs.get(i);
+			Integer tempMin = getMinAvailableTimeForPieceByGivenTime(wn,
+					playStartTime);
+			if (tempMin < minTime) {
+				minTime = tempMin;
+				firstAvailableWN = wn;
+			}
+		}
+
+		if (firstAvailableWN == null) {
+			System.out
+					.println("No available set of watching nodes with a valid stream for the victim joining at "
+							+ playStartTime);
+			return null;
+		}
+
+		HashMap<Integer, WatchingNode> streamMembers = new LinkedHashMap<Integer, WatchingNode>();
+		streamMembers.put(firstAvailableWN.getNodeId(), firstAvailableWN);
+
+		List<WatchingNode> sameFactorWNs = getOtherCandidateWNsByFactor(
+				candidateWNs, firstAvailableWN.getLocalFileBuffer()
+						.getWritingFactor(), firstAvailableWN.getNodeId());
+
+		streamMembers = addOtherWNsMatchingStreamCriteria(sameFactorWNs,
+				streamMembers, playStartTime, minTime, firstAvailableWN
+						.getLocalFileBuffer().getWritingFactor());
+
+		if (streamMembers == null)
+			System.out.println("No available stream");
+		else
+			System.out.println(streamMembers.keySet());
+
 		return null;
 	}
 
