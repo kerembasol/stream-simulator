@@ -3,8 +3,8 @@ package entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import simulator.StreamNetwork;
 import util.Distribution;
+import exception.AdditionOfAlreadyExistingNodeException;
 import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
@@ -37,8 +37,9 @@ public abstract class Node implements Comparable<Node> {
 		this.playbackBuffer = new ArrayList<PacketSet>(maxPlaybackBufferLen);
 	}
 
-	public abstract void detachNodeFromNetwork(StreamNetwork streamnetwork)
-			throws RetrievalOfNonExistingNodeException;
+	public abstract void detachNodeFromNetwork()
+			throws RetrievalOfNonExistingNodeException,
+			AdditionOfAlreadyExistingNodeException;
 
 	public abstract void updateBuffers();
 

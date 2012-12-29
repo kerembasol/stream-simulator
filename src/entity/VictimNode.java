@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import simulator.StreamNetwork;
 import exception.AdditionOfAlreadyExistingNodeException;
 import exception.RetrievalOfNonExistingNodeException;
 
@@ -34,32 +33,22 @@ public class VictimNode extends Node {
 	}
 
 	@Override
-	public void detachNodeFromNetwork(StreamNetwork network)
-			throws RetrievalOfNonExistingNodeException {
-		List<WatchingNode> wns = getMapAsList();
-		while (getPlayAmount().intValue() > 0) {
-			Iterator<WatchingNode> iterator = wns.iterator();
-			while (iterator.hasNext()) {
-				WatchingNode wn = iterator.next();
-				if (wn.getAvailableUploadAmount().intValue() >= wn
-						.getUploadRate().intValue()) {
-					continue;
-				}
-				wn.setAvailableUploadAmount(Integer.valueOf(wn
-						.getAvailableUploadAmount().intValue() + 1));
-				setPlayAmount(Integer.valueOf(getPlayAmount().intValue() - 1));
-				if (getPlayAmount().intValue() == 0) {
-					break;
-				}
-			}
-		}
-		WatchingNode wn;
-		for (Iterator<WatchingNode> iterator1 = wns.iterator(); iterator1
-				.hasNext(); wn.removeVictimNode(nodeId)) {
-			wn = iterator1.next();
-		}
-
-		network.getVictimNodes().remove(nodeId);
+	public void detachNodeFromNetwork()
+			throws RetrievalOfNonExistingNodeException,
+			AdditionOfAlreadyExistingNodeException {
+		// List<WatchingNode> wns = getMapAsList();
+		// for (WatchingNode wn : wns) {
+		// if (wn.hasDirectVictimNode()
+		// && this.nodeId == wn.getDirectVictimNodeId()) {
+		// StreamNetwork.getInstance().getTracker()
+		// .addVictimNodelessWatchingNode(wn);
+		//
+		// StreamNetwork.getInstance().getTracker().addWatchingNodeWithAvailableUploadRate(wn);
+		// StreamNetwork.getInstance().
+		// }
+		// }
+		//
+		// network.getVictimNodes().remove(nodeId);
 	}
 
 	private List<WatchingNode> getMapAsList() {

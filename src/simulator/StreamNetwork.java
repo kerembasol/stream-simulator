@@ -16,6 +16,7 @@ import exception.AdditionOfAlreadyExistingNodeException;
 import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
+import exception.IllegalValueException;
 import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
 import exception.RetrievalOfNonExistingNodeException;
@@ -58,7 +59,7 @@ public class StreamNetwork {
 			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
 			InconsistentPacketAdditionToSetByTime,
-			AdditionOfNewSetWithLargerSetSizeException {
+			AdditionOfNewSetWithLargerSetSizeException, IllegalValueException {
 
 		if (getNodeById(nodeId) != null)
 			throw new AdditionOfAlreadyExistingNodeException(
@@ -123,9 +124,10 @@ public class StreamNetwork {
 		node.addPacketSetToPlaybackBuffer(tracker.createPacketSet(
 				Simulator.CURRENT_TIME, node.getPlayRate()));
 
-		watchingNodes.put(nodeId, node);
+		addWatchingNode(node);
 		tracker.decreaseAvailableStreamRateByAmount(node.getPlayRate());
 		tracker.addVictimNodelessWatchingNode(node);
+		tracker.addWatchingNodeWithAvailableUploadRate(node);
 
 		System.out.println((new StringBuilder("\tNode ")).append(nodeId)
 				.append(" joined network as a Watching node. Playback rate:")
@@ -138,7 +140,7 @@ public class StreamNetwork {
 	public void insertVictimNodeByWatchingNodeSet(VictimNode vn,
 			List<WatchingNode> wns)
 			throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNodeException {
+			RetrievalOfNonExistingNodeException, IllegalValueException {
 
 		if (victimNodes.containsKey(vn.getNodeId()))
 			throw new AdditionOfAlreadyExistingNodeException(
@@ -164,6 +166,13 @@ public class StreamNetwork {
 			vn.associateWatchingNode(wn);
 			System.out.print((new StringBuilder("-")).append(wn.getNodeId())
 					.toString());
+			if (wn.getAvailableUploadRate() < 0)
+				throw new IllegalValueException("Upload value :"
+						+ wn.getAvailableUploadRate()
+						+ " cannot be negative for watching node :"
+						+ wn.getNodeId());
+			if (wn.getAvailableUploadRate() == 0)
+				tracker.removeWatchingNodeWithAvailableUploadRate(wn);
 		}
 		System.out.println("- >");
 
@@ -171,7 +180,7 @@ public class StreamNetwork {
 
 	public void insertVictimNodeBySingleWatchingNode(VictimNode vn,
 			WatchingNode wn) throws AdditionOfAlreadyExistingNodeException,
-			RetrievalOfNonExistingNodeException {
+			RetrievalOfNonExistingNodeException, IllegalValueException {
 		if (victimNodes.containsKey(vn.getNodeId()))
 			throw new AdditionOfAlreadyExistingNodeException(
 					"Adding already existing victim node");
@@ -184,6 +193,13 @@ public class StreamNetwork {
 		wn.associateVictimNode(vn);
 		vn.associateWatchingNode(wn);
 		tracker.removeVictimNodelessWatchingNode(wn.getNodeId());
+		if (wn.getAvailableUploadRate() < 0)
+			throw new IllegalValueException(
+					"Available upload rate of watching node " + wn.getNodeId()
+							+ " is " + wn.getAvailableUploadRate());
+
+		if (wn.getAvailableUploadRate() == 0)
+			tracker.removeWatchingNodeWithAvailableUploadRate(wn);
 
 		System.out.print((new StringBuilder("\tNode "))
 				.append(vn.getNodeId())
@@ -237,6 +253,26 @@ public class StreamNetwork {
 
 	private Integer getWatchDuration() {
 		return Distribution.uniform(WATCH_DURATION_PARAM) + 10;
+	}
+
+	public void addWatchingNode(WatchingNode wn)
+			throws AdditionOfAlreadyExistingNodeException {
+		if (watchingNodes.containsKey(wn.getNodeId()))
+			throw new AdditionOfAlreadyExistingNodeException(
+					"Trying to add WatchingNode : " + wn.getNodeId()
+							+ " to the network");
+		watchingNodes.put(wn.getNodeId(), wn);
+	}
+
+	public void removeWatchingNode(WatchingNode wn)
+			throws RetrievalOfNonExistingNodeException {
+		if (!watchingNodes.containsKey(wn.getNodeId()))
+			throw new RetrievalOfNonExistingNodeException(
+					"Trying to remove WatchingNode : " + wn.getNodeId()
+							+ " from the network");
+
+		watchingNodes.remove(wn.getNodeId());
+
 	}
 
 	/**

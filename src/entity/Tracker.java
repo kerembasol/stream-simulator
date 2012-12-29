@@ -20,12 +20,15 @@ public class Tracker {
 	private Integer availableStreamRate;
 
 	private SortedMap<Integer, WatchingNode> victimNodelessWatchingNodes;
+	private SortedMap<Integer, WatchingNode> watchingNodesWithAvailableUploadRate;
 
 	private static final int AVAILABLE_STREAM_RATE = 150;
 
 	public Tracker() {
-		availableStreamRate = Integer.valueOf(Distribution.uniform(150));
+		availableStreamRate = Integer.valueOf(Distribution
+				.uniform(AVAILABLE_STREAM_RATE));
 		victimNodelessWatchingNodes = new TreeMap<Integer, WatchingNode>();
+		watchingNodesWithAvailableUploadRate = new TreeMap<Integer, WatchingNode>();
 	}
 
 	public boolean hasAvailableBandwith(Integer playRate) {
@@ -107,7 +110,7 @@ public class Tracker {
 		return wn.getClosestPacketTimeForGivenPlaybackTime(joinTime);
 	}
 
-	private List<WatchingNode> getWatchingNodesWithAvailableUploadRates(
+	private List<WatchingNode> getWatchingNodesWithAvailableUploadRatesByRate(
 			Integer playRate) {
 
 		SortedMap<Integer, WatchingNode> all = StreamNetwork.getInstance()
@@ -117,7 +120,7 @@ public class Tracker {
 		List<WatchingNode> returnList = new ArrayList<WatchingNode>();
 		while (iterator.hasNext()) {
 			WatchingNode wn = all.get(iterator.next());
-			if (wn.getHasDirectVictimNode()
+			if (wn.hasDirectVictimNode()
 					&& wn.getAvailableUploadRate() >= playRate)
 				returnList.add(wn);
 		}
@@ -130,7 +133,7 @@ public class Tracker {
 
 		// get first Watching Node with an available piece
 		Integer minTime = Integer.MAX_VALUE;
-		List<WatchingNode> candidateWNs = getWatchingNodesWithAvailableUploadRates(playRate);
+		List<WatchingNode> candidateWNs = getWatchingNodesWithAvailableUploadRatesByRate(playRate);
 		WatchingNode firstAvailableWN = null;
 		for (int i = 0; i < candidateWNs.size(); i++) {
 			WatchingNode wn = candidateWNs.get(i);
@@ -180,10 +183,31 @@ public class Tracker {
 	public void removeVictimNodelessWatchingNode(Integer id)
 			throws RetrievalOfNonExistingNodeException {
 		if (!victimNodelessWatchingNodes.containsKey(id))
-			throw new RetrievalOfNonExistingNodeException("Trying to add node "
-					+ id + " from victim nodeless watching node list");
+			throw new RetrievalOfNonExistingNodeException(
+					"Trying to remove node " + id
+							+ " from victim nodeless watching node list");
 
 		victimNodelessWatchingNodes.remove(id);
+	}
+
+	public void addWatchingNodeWithAvailableUploadRate(WatchingNode wn)
+			throws AdditionOfAlreadyExistingNodeException {
+		if (watchingNodesWithAvailableUploadRate.containsKey(wn.getNodeId()))
+			throw new AdditionOfAlreadyExistingNodeException(
+					"Trying to add node "
+							+ wn.getNodeId()
+							+ " to watching nodes with available upload rate list");
+
+		watchingNodesWithAvailableUploadRate.put(wn.getNodeId(), wn);
+	}
+
+	public void removeWatchingNodeWithAvailableUploadRate(WatchingNode wn)
+			throws RetrievalOfNonExistingNodeException {
+		if (!watchingNodesWithAvailableUploadRate.containsKey(wn.getNodeId()))
+			throw new RetrievalOfNonExistingNodeException(
+					"Trying to remove node " + wn.getNodeId()
+							+ " from nodes with available upload rate list");
+		watchingNodesWithAvailableUploadRate.remove(wn.getNodeId());
 	}
 
 	/**

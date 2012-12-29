@@ -3,11 +3,11 @@
  */
 package event;
 
-import simulator.StreamNetwork;
 import exception.AdditionOfAlreadyExistingNodeException;
 import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
+import exception.IllegalValueException;
 import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
 import exception.RetrievalOfNonExistingNodeException;
@@ -26,7 +26,7 @@ public abstract class Event implements Comparable<Event> {
 		startTime = time;
 	}
 
-	public abstract void execute(StreamNetwork network)
+	public abstract void execute()
 			throws AdditionOfAlreadyExistingNodeException,
 			RetrievalOfNonExistingNodeException,
 			NotEnoughAvailableTrackerStreamException, BufferOverflowException,
@@ -35,7 +35,7 @@ public abstract class Event implements Comparable<Event> {
 			RetrievalOfNonExistingNodeException,
 			exception.BufferOverflowException,
 			InconsistentPacketAdditionToSetByTime,
-			AdditionOfNewSetWithLargerSetSizeException;
+			AdditionOfNewSetWithLargerSetSizeException, IllegalValueException;
 
 	public abstract boolean isCompleted(int currentTime);
 

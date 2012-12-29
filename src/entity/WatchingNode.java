@@ -91,9 +91,10 @@ public class WatchingNode extends Node {
 
 	// TODO victimNode behavior is to be determined
 	@Override
-	public void detachNodeFromNetwork(StreamNetwork network) {
-		network.getWatchingNodes().remove(this.nodeId);
-		network.getTracker().increaseAvailableStreamRateByAmount(this.playRate);
+	public void detachNodeFromNetwork() {
+		StreamNetwork.getInstance().getWatchingNodes().remove(this.nodeId);
+		StreamNetwork.getInstance().getTracker()
+				.increaseAvailableStreamRateByAmount(this.playRate);
 	}
 
 	public void addPacketSetToUploadBuffer(VictimNode vn, PacketSet set)
@@ -115,8 +116,12 @@ public class WatchingNode extends Node {
 
 	}
 
-	public boolean getHasDirectVictimNode() {
+	public boolean hasDirectVictimNode() {
 		return this.directVictimNodeId.intValue() != -1;
+	}
+
+	public Integer getDirectVictimNodeId() {
+		return this.directVictimNodeId;
 	}
 
 	public Integer getClosestPacketNumberForGivenPlaybackTime(Integer time) {

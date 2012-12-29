@@ -5,6 +5,7 @@ package event;
 
 import simulator.StreamNetwork;
 import entity.Node;
+import exception.AdditionOfAlreadyExistingNodeException;
 import exception.RetrievalOfNonExistingNodeException;
 
 /**
@@ -22,18 +23,18 @@ public class DepartureEvent extends Event {
 	}
 
 	@Override
-	public void execute(StreamNetwork network)
-			throws RetrievalOfNonExistingNodeException {
+	public void execute() throws RetrievalOfNonExistingNodeException,
+			AdditionOfAlreadyExistingNodeException {
 
 		System.out.println("Executing departure event (start : " + startTime
 				+ ", NodeId:" + nodeId + ")");
 
-		Node node = network.getNodeById(nodeId);
+		Node node = StreamNetwork.getInstance().getNodeById(nodeId);
 		if (node == null)
 			throw new RetrievalOfNonExistingNodeException(
 					"Trying to depart non-existing node");
 
-		node.detachNodeFromNetwork(network);
+		node.detachNodeFromNetwork();
 	}
 
 	@Override

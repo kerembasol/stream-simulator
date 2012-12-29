@@ -10,6 +10,7 @@ import exception.AdditionOfAlreadyExistingNodeException;
 import exception.AdditionOfNewSetWithLargerSetSizeException;
 import exception.AdditionOfOutdatedPacketSetException;
 import exception.BufferOverflowException;
+import exception.IllegalValueException;
 import exception.InconsistentPacketAdditionToSetByTime;
 import exception.NotEnoughAvailableTrackerStreamException;
 import exception.RetrievalOfNonExistingNodeException;
@@ -25,18 +26,18 @@ public class ArrivalEvent extends Event {
 	}
 
 	@Override
-	public void execute(StreamNetwork network)
-			throws AdditionOfAlreadyExistingNodeException,
+	public void execute() throws AdditionOfAlreadyExistingNodeException,
 			NotEnoughAvailableTrackerStreamException,
 			RetrievalOfNonExistingNodeException, BufferOverflowException,
 			AdditionOfOutdatedPacketSetException,
 			InconsistentPacketAdditionToSetByTime,
-			AdditionOfNewSetWithLargerSetSizeException {
+			AdditionOfNewSetWithLargerSetSizeException, IllegalValueException {
 
 		System.out.println("Executing arrival event (start : " + startTime
 				+ ", NodeId:" + nodeId + ")");
 
-		Node node = network.handleNewNode(nodeId, startTime);
+		Node node = StreamNetwork.getInstance()
+				.handleNewNode(nodeId, startTime);
 		if (node != null) {
 			Integer newStartTime = node.getPlayStartTime()
 					+ node.getWatchDuration();
