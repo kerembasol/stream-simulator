@@ -190,6 +190,11 @@ public class Tracker {
 		victimNodelessWatchingNodes.remove(id);
 	}
 
+	public boolean hasGivenWatchingNodeInNodeWithAvailableUploadRateList(
+			Integer wnId) {
+		return watchingNodesWithAvailableUploadRate.containsKey(wnId);
+	}
+
 	public void addWatchingNodeWithAvailableUploadRate(WatchingNode wn)
 			throws AdditionOfAlreadyExistingNodeException {
 		if (watchingNodesWithAvailableUploadRate.containsKey(wn.getNodeId()))
